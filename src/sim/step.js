@@ -5,6 +5,7 @@ import { updatePlates, updateGates, updatePaint, recoverCrates } from './logic.j
 import {
   tickRespawns, checkHazards, updateSafeSpots, updateCheckpoints, updateKey, doorInputs, checkClear,
 } from './flow.js';
+import { soloInputs, soloAfterDoor } from './solo.js';
 
 function normalizeInputs(state, inputs) {
   const out = new Array(state.n).fill(0);
@@ -19,11 +20,14 @@ function normalizeInputs(state, inputs) {
 // Advance the simulation by exactly one tick.
 export function step(state, inputs) {
   state.events = [];
-  const bits = normalizeInputs(state, inputs);
+  tickRespawns(state);
+  const bits = state.solo
+    ? soloInputs(state, typeof inputs === 'number' ? inputs : Array.isArray(inputs) ? inputs[0] | 0 : 0)
+    : normalizeInputs(state, inputs);
   const pressedOf = (b) => bits[b.i] & ~b.prev;
 
-  tickRespawns(state);
   const usedDoor = doorInputs(state, bits, pressedOf);
+  if (state.solo) soloAfterDoor(state);
 
   for (const b of state.blobs) {
     if (!b.alive || b.inDoor || usedDoor.has(b.i)) continue;
