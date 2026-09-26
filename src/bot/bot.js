@@ -13,6 +13,7 @@ const tileX = (t) => t * TILE + TILE / 2;
 const dirBits = (d) => (d > 0 ? RIGHT : d < 0 ? LEFT : 0);
 
 function describe(st) {
+  if (st.label) return `${st.do} ${st.label}`;
   return `${st.do}${st.p !== undefined ? ` p${st.p}` : ''}${st.to !== undefined ? ` to ${st.to}` : ''}`;
 }
 

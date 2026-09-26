@@ -30,7 +30,7 @@ for (const def of LEVELS) {
     else {
       failures++;
       const pos = state.blobs.map((b) => `${b.i}@${(b.x / 64).toFixed(1)},${((b.y + b.h) / 64).toFixed(1)}${b.alive ? '' : 'x'}${b.inDoor ? 'D' : ''}`).join(' ');
-      line.push(`${label}:FAIL ${secs}s [${r.reason}] ${pos} key=${state.key.holder}`);
+      line.push(`${label}:FAIL ${secs}s [${r.reason}] ${pos} key=${state.key.holder} crates=${state.crates.map((c) => `${(c.x / 64).toFixed(1)},${((c.y + c.h) / 64).toFixed(1)}`).join(" ")}`);
     }
   }
   console.log(line.join(' | '));
