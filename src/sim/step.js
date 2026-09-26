@@ -6,6 +6,7 @@ import {
   tickRespawns, checkHazards, updateSafeSpots, updateCheckpoints, updateKey, doorInputs, checkClear,
 } from './flow.js';
 import { soloInputs, soloAfterDoor } from './solo.js';
+import { applyTether } from './tether.js';
 
 function normalizeInputs(state, inputs) {
   const out = new Array(state.n).fill(0);
@@ -36,6 +37,7 @@ export function step(state, inputs) {
 
   computePushes(state);
   integrate(state, moveLifts);
+  applyTether(state);
   updatePlates(state);
   updateGates(state);
   updatePaint(state);
