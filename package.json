@@ -1,0 +1,18 @@
+{
+  "name": "mochi-mob",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Mochi Mob — an original co-op puzzle platformer for 1-4 players.",
+  "scripts": {
+    "dev": "concurrently -k -n client,server \"npm:dev:client\" \"npm:dev:server\"",
+    "dev:client": "vite --port 5175 --strictPort",
+    "dev:server": "node --watch server/index.js",
+    "build": "vite build",
+    "start": "node server/index.js",
+    "test": "vitest run"
+  },
+  "dependencies": { "ws": "^8.18.0" },
+  "devDependencies": { "vite": "^6.0.0", "vitest": "^2.1.0", "concurrently": "^9.0.0" },
+  "engines": { "node": ">=20" }
+}
