@@ -9,6 +9,7 @@ import w23 from './w2-3.js';
 import w24 from './w2-4.js';
 import w25 from './w2-5.js';
 import w31 from './w3-1.js';
+import w32 from './w3-2.js';
 
 export const WORLDS = [
   { id: 1, name: 'Puddle Meadow', theme: 'meadow' },
@@ -17,7 +18,7 @@ export const WORLDS = [
   { id: 4, name: 'Prism Peaks', theme: 'peaks' },
 ];
 
-export const LEVELS = [w11, w12, w13, w14, w15, w21, w22, w23, w24, w25, w31];
+export const LEVELS = [w11, w12, w13, w14, w15, w21, w22, w23, w24, w25, w31, w32];
 
 export function getLevel(id) {
   return LEVELS.find((l) => l.id === id) ?? null;

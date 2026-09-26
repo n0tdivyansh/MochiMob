@@ -4,7 +4,7 @@
 // edge, so the rope rarely goes taut. Solo: the leader jumps with Follow on and
 // keeps walking; the follower stops at the edge, gets dragged in, and is hauled
 // up the far side by the rope.
-export const crossGap = (order, edge, far, { solo = false } = {}) => {
+export const crossGap = (order, edge, far, { solo = false, haul = 11 } = {}) => {
   if (solo) {
     const lead = order[0];
     return [
@@ -12,7 +12,7 @@ export const crossGap = (order, edge, far, { solo = false } = {}) => {
       { do: 'follow', on: true },
       { do: 'walk', p: lead, to: edge - 2.5, hop: true },
       { do: 'walkJump', p: lead, to: far + 1, at: edge - 0.45, hop: true, tol: 40 },
-      { do: 'walk', p: lead, to: far + 11, hop: true, tol: 40 },
+      { do: 'walk', p: lead, to: far + haul, hop: true, tol: 40 },
       { do: 'until', label: 'team across', test: (s) => s.blobs.every((b) => b.alive && b.grounded && b.x > far * 64) },
       { do: 'follow', on: false },
     ];
