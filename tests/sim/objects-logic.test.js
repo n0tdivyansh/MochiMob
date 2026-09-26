@@ -154,3 +154,18 @@ describe('crate recovery', () => {
     expect(s.crates[0].y).toBe(256);
   });
 });
+
+describe('plate weight', () => {
+  it('blobs stacked on a presser also count', () => {
+    const s = world(ROOM, [{ type: 'plate', id: 'p', x: 10, y: 4, need: 2 }]);
+    const [a, c] = s.blobs;
+    settle(s);
+    onPlate(a, 646);
+    c.x = 646;
+    c.y = 272 - 60;
+    run(s, 20);
+    expect(c.support).toEqual({ kind: 'blob', idx: 0 });
+    expect(s.plates[0].count).toBe(2);
+    expect(s.plates[0].active).toBe(true);
+  });
+});

@@ -130,3 +130,17 @@ describe('follow AI', () => {
     expect(a.blobs[0].x).toBe(b.blobs[0].x);
   });
 });
+
+describe('follow AI pushing', () => {
+  it('followers help the active blob push a heavy crate', () => {
+    const s = solo(ROOM, [{ type: 'crate', x: 8, y: 4, weight: 2 }]);
+    const [a, b] = s.blobs;
+    b.x = 8 * 64 - 52;
+    a.x = 8 * 64 - 110;
+    soloCommand(s, 1);
+    settle(s);
+    soloCommand(s, 'follow');
+    run(s, 60, () => RIGHT);
+    expect(s.crates[0].x).toBeGreaterThan(8 * 64 + 60);
+  });
+});

@@ -10,15 +10,27 @@ function pressing(body, plate) {
   return hOverlapLen(body, plate) >= 8;
 }
 
+// True when body rests (directly or through a stack) on something in `base`.
+function stackedOn(state, body, base) {
+  let cur = body;
+  for (let depth = 0; depth < 8 && cur && cur.support; depth++) {
+    const s = cur.support;
+    if (s.kind !== 'blob' && s.kind !== 'crate') return false;
+    cur = s.kind === 'blob' ? state.blobs[s.idx] : state.crates[s.idx];
+    if (base.has(cur)) return true;
+  }
+  return false;
+}
+
 export function updatePlates(state) {
   for (const p of state.plates) {
-    let count = 0;
-    for (const b of state.blobs) {
-      if (!b.alive || b.inDoor) continue;
-      if (p.color !== null && b.color !== p.color) continue;
-      if (pressing(b, p)) count++;
-    }
-    if (p.color === null) for (const c of state.crates) if (pressing(c, p)) count++;
+    const counts = (b) => b.alive && !b.inDoor && (p.color === null || b.color === p.color);
+    const direct = new Set();
+    for (const b of state.blobs) if (counts(b) && pressing(b, p)) direct.add(b);
+    if (p.color === null) for (const c of state.crates) if (pressing(c, p)) direct.add(c);
+    let count = direct.size;
+    // Blobs stacked on pressers add their weight too.
+    for (const b of state.blobs) if (!direct.has(b) && counts(b) && stackedOn(state, b, direct)) count++;
     p.count = count;
     const on = count >= p.need;
     if (on && p.latch) p.latched = true;

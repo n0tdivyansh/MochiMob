@@ -68,8 +68,12 @@ function followBits(state, b, t) {
   let wantJump = false;
 
   const brake = (b.vx * b.vx) / (2 * FRICTION);
-  if (Math.abs(dx) > FOLLOW_STOP + brake) {
-    const dir = Math.sign(dx);
+  // Far away: walk toward the leader. Close: copy the leader's direction so
+  // followers push crates and walk alongside instead of blocking.
+  const far = Math.abs(dx) > FOLLOW_STOP + brake;
+  const mimic = !far && t.dir !== 0 && t.grounded && b.grounded;
+  if (far || mimic) {
+    const dir = far ? Math.sign(dx) : t.dir;
     // Look ahead by the braking distance so the follower stops before the edge.
     const look = 8 + brake;
     const footX = dir > 0 ? b.x + b.w + look : b.x - look;
