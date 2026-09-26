@@ -166,3 +166,30 @@ describe('long push chains', () => {
     expect(stalls).toBe(0);
   });
 });
+
+describe('powered loop lifts', () => {
+  const ent = (extra) => ({ type: 'lift', x: 10, y: 4.5, w: 2, ax: 10, ay: 4.5, bx: 10, by: 2, mode: 'loop', ...extra });
+
+  it('a loop lift linked to a plate only runs while the plate is active', () => {
+    const s = world(ROOM, [{ type: 'plate', id: 'p', x: 3, y: 4 }, ent({ link: ['p'] })]);
+    run(s, 60);
+    expect(s.lifts[0].t).toBe(0);
+    s.blobs[0].x = 3 * 64 + 6;
+    run(s, 60);
+    expect(s.lifts[0].t).toBeGreaterThan(0.3);
+  });
+
+  it('dwell pauses a loop lift at each end', () => {
+    const s = world(ROOM, [ent({ dwell: 30, speed: 160 })]);
+    const ts = [];
+    for (let t = 0; t < 200; t++) {
+      run(s, 1);
+      ts.push(s.lifts[0].t);
+    }
+    const firstTop = ts.indexOf(1);
+    expect(firstTop).toBeGreaterThan(0);
+    for (let k = 0; k < 30; k++) expect(ts[firstTop + k]).toBe(1);
+    expect(ts[firstTop + 31]).toBeLessThan(1);
+    expect(ts.slice(0, 30).every((v) => v === 0)).toBe(true);
+  });
+});

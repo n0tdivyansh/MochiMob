@@ -76,6 +76,7 @@ export function createWorld(def, n, { solo = false } = {}) {
           kind: 'lift', idx: s.lifts.length, id: e.id ?? `lift${s.lifts.length}`, x: ax, y: ay, w: e.w, h,
           ax, ay, bx: e.bx ?? ax, by: e.by ?? ay, t: 0, dir: 1, mode: e.mode ?? 'loop',
           need: e.need ?? 1, link: e.link ?? [], speed: e.speed ?? 120, mx: 0, my: 0, riders: 0,
+          dwell: e.dwell ?? 0, wait: e.dwell ?? 0,
         });
         break;
       }

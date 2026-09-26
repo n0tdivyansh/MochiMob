@@ -91,6 +91,12 @@ export function moveLifts(state) {
     if (lift.mode === 'weight') dir = lift.riders >= lift.need ? 1 : -1;
     else if (lift.mode === 'plate') dir = plateActive(state, lift.link) ? 1 : -1;
     else {
+      // Loop lifts linked to plates only run while powered; dwell pauses at each end.
+      if (lift.link.length && !plateActive(state, lift.link)) continue;
+      if (lift.wait > 0) {
+        lift.wait--;
+        continue;
+      }
       if (lift.t >= 1) lift.dir = -1;
       else if (lift.t <= 0) lift.dir = 1;
       dir = lift.dir;
@@ -117,6 +123,7 @@ export function moveLifts(state) {
     lift.x = nx;
     lift.y = ny;
     lift.t = t;
+    if (lift.mode === 'loop' && (t === 0 || t === 1)) lift.wait = lift.dwell;
     lift.mx = dx;
     lift.my = dy;
   }
