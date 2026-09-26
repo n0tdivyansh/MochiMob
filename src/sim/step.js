@@ -2,6 +2,9 @@ import { controlBlob } from './blob.js';
 import { integrate } from './physics.js';
 import { computePushes, moveLifts } from './objects.js';
 import { updatePlates, updateGates, updatePaint, recoverCrates } from './logic.js';
+import {
+  tickRespawns, checkHazards, updateSafeSpots, updateCheckpoints, updateKey, doorInputs, checkClear,
+} from './flow.js';
 
 function normalizeInputs(state, inputs) {
   const out = new Array(state.n).fill(0);
@@ -17,11 +20,14 @@ function normalizeInputs(state, inputs) {
 export function step(state, inputs) {
   state.events = [];
   const bits = normalizeInputs(state, inputs);
+  const pressedOf = (b) => bits[b.i] & ~b.prev;
+
+  tickRespawns(state);
+  const usedDoor = doorInputs(state, bits, pressedOf);
 
   for (const b of state.blobs) {
-    const cur = bits[b.i];
-    const pressed = cur & ~b.prev;
-    if (b.alive && !b.inDoor) controlBlob(state, b, cur, pressed);
+    if (!b.alive || b.inDoor || usedDoor.has(b.i)) continue;
+    controlBlob(state, b, bits[b.i], pressedOf(b));
   }
 
   computePushes(state);
@@ -30,6 +36,12 @@ export function step(state, inputs) {
   updateGates(state);
   updatePaint(state);
   recoverCrates(state);
+
+  checkHazards(state);
+  updateSafeSpots(state);
+  updateCheckpoints(state);
+  updateKey(state);
+  checkClear(state);
 
   for (const b of state.blobs) b.prev = bits[b.i];
   state.tick++;
