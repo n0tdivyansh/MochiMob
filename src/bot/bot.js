@@ -44,7 +44,7 @@ function makeAction(st) {
             const crossing = dx > 0 ? cx(b) >= at : cx(b) <= at;
             if (crossing) {
               jumped = true;
-              jumpT = st.hold ?? 16;
+              jumpT = st.hold ?? 22;
             }
           }
           let bits = 0;
@@ -71,7 +71,7 @@ function makeAction(st) {
     }
     case 'jump': {
       let t = 0;
-      const hold = st.hold ?? 16;
+      const hold = st.hold ?? 22;
       return {
         ...base,
         tick: aging((ctx) => {

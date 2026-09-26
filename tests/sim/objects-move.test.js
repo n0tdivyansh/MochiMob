@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { world, run, ROOM, put } from './helpers.js';
-import { overlap } from '../../src/sim/geom.js';
+import { overlap, deepOverlap } from '../../src/sim/geom.js';
 import { INPUT } from '../../src/sim/constants.js';
 
 const { LEFT, RIGHT, SQUISH } = INPUT;
@@ -136,5 +136,33 @@ describe('lifts', () => {
       expect(overlap(a, lift)).toBe(false);
     }
     expect(lift.y + lift.h).toBeLessThanOrEqual(a.y + 0.01);
+  });
+});
+
+describe('long push chains', () => {
+  it('three blobs push a weight-3 crate without stuttering or overlapping', () => {
+    const s = world(ROOM, [{ type: 'crate', x: 11, y: 4, weight: 3 }], 3);
+    run(s, 5);
+    for (let t = 0; t < 320; t++) {
+      run(s, 1, () => [RIGHT, RIGHT, RIGHT]);
+      const bs = s.blobs;
+      for (let i = 0; i < 3; i++) for (let j = i + 1; j < 3; j++) expect(deepOverlap(bs[i], bs[j], 1e-6)).toBe(false);
+    }
+    expect(s.crates[0].x).toBe(18 * 64);
+    expect(s.blobs[2].x + 52).toBe(18 * 64);
+  });
+
+  it('once contact is made the crate moves every tick until the wall', () => {
+    const s = world(ROOM, [{ type: 'crate', x: 8, y: 4, weight: 3 }], 3);
+    run(s, 5);
+    let started = false;
+    let stalls = 0;
+    for (let t = 0; t < 200 && s.crates[0].x < 18 * 64; t++) {
+      run(s, 1, () => [RIGHT, RIGHT, RIGHT]);
+      if (s.crates[0].mx > 0) started = true;
+      else if (started) stalls++;
+    }
+    expect(started).toBe(true);
+    expect(stalls).toBe(0);
   });
 });

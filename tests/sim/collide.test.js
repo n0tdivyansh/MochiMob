@@ -101,3 +101,24 @@ describe('collision', () => {
     expect(b.x).toBe(0);
   });
 });
+
+describe('float robustness', () => {
+  it('a hairline overlap from rounding still blocks movement', () => {
+    const s = world();
+    const [a, c] = s.blobs;
+    c.x = a.x + a.w - 1e-13;
+    moveX(s, a, 5);
+    expect(a.x + a.w).toBeLessThanOrEqual(c.x + 1e-6);
+  });
+
+  it('a blocked move never pushes a body backwards', () => {
+    const s = world();
+    const [a, c] = s.blobs;
+    a.x = 926.6666666666703;
+    c.x = 978.6666666666703;
+    const r = moveX(s, a, 4.2);
+    expect(r.moved).toBeGreaterThanOrEqual(0);
+    const r2 = moveY(s, a, 3);
+    expect(r2.moved).toBeGreaterThanOrEqual(0);
+  });
+});

@@ -106,7 +106,7 @@ export function integrate(state, kinematic) {
     b.my = 0;
   }
   if (kinematic) kinematic(state);
-  const moved = new Set();
+  const pending = new Set(bodies);
   bodies.sort((a, b) => b.y + b.h - (a.y + a.h));
   const g = GRAVITY * DT;
   const deferred = [];
@@ -135,20 +135,39 @@ export function integrate(state, kinematic) {
     const dx = own + carry.x;
     const rx = moveX(state, body, dx);
     body.mx += rx.moved;
-    if (rx.hit) {
-      const other = rx.hit.body;
-      if (other && other.kind !== 'lift' && !moved.has(other)) {
-        deferred.push({ body, rest: dx - rx.moved });
-      } else if (body.kind === 'blob') {
-        horizontalHit(body, rx.hit);
-      }
+    const blocker = rx.hit && rx.hit.body;
+    if (blocker && blocker.kind !== 'lift' && pending.has(blocker)) {
+      deferred.push({ body, rest: dx - rx.moved, blocker });
+    } else {
+      if (rx.hit && body.kind === 'blob') horizontalHit(body, rx.hit);
+      pending.delete(body);
     }
-    moved.add(body);
   }
 
-  for (const { body, rest } of deferred) {
-    const rx = moveX(state, body, rest);
-    body.mx += rx.moved;
-    if (rx.hit && body.kind === 'blob') horizontalHit(body, rx.hit);
+  // Bodies blocked by a neighbour that had not moved yet retry once it has,
+  // so chains of blobs walking or pushing together stay in contact.
+  let progress = true;
+  while (deferred.length && progress) {
+    progress = false;
+    for (let k = 0; k < deferred.length; k++) {
+      const d = deferred[k];
+      if (pending.has(d.blocker)) continue;
+      const rx = moveX(state, d.body, d.rest);
+      d.body.mx += rx.moved;
+      const blocker = rx.hit && rx.hit.body;
+      if (blocker && blocker.kind !== 'lift' && pending.has(blocker)) {
+        d.rest -= rx.moved;
+        d.blocker = blocker;
+        continue;
+      }
+      if (rx.hit && d.body.kind === 'blob') horizontalHit(d.body, rx.hit);
+      pending.delete(d.body);
+      deferred.splice(k--, 1);
+      progress = true;
+    }
+  }
+  for (const d of deferred) {
+    if (d.body.kind === 'blob') d.body.vx = 0;
+    pending.delete(d.body);
   }
 }

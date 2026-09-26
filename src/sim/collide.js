@@ -1,8 +1,10 @@
 import { TILE, T, ONEWAY_H, LOW_H, PAD_H } from './constants.js';
-import { overlap } from './geom.js';
+import { overlap, deepOverlap } from './geom.js';
 import { spanLimits } from './camera.js';
 
 const SUBSTEP = 8;
+// Overlaps thinner than this are float noise between flush bodies, not collisions.
+const HAIRLINE = 1e-6;
 
 function tileRect(code, c, r) {
   const x = c * TILE;
@@ -107,18 +109,19 @@ export function moveX(state, body, dx, opts = {}) {
       if (!dx) return { moved: 0, hit: { ref: { kind: 'span' } } };
     }
   }
-  const solids = solidsFor(state, body, sweepArea(body, dx, 0), opts).filter((s) => !s.oneWay && !overlap(s, body));
+  const solids = solidsFor(state, body, sweepArea(body, dx, 0), opts).filter((s) => !s.oneWay && !deepOverlap(s, body));
   const steps = Math.ceil(Math.abs(dx) / SUBSTEP);
   const inc = dx / steps;
   for (let k = 0; k < steps; k++) {
     body.x = startX + inc * (k + 1);
     let hit = null;
     for (const s of solids) {
-      if (!overlap(s, body)) continue;
+      if (!deepOverlap(s, body, HAIRLINE)) continue;
       if (inc > 0 ? !hit || s.x < hit.x : !hit || s.x + s.w > hit.x + hit.w) hit = s;
     }
     if (hit) {
-      body.x = inc > 0 ? hit.x - body.w : hit.x + hit.w;
+      // Snap flush, but never backwards past where the move started.
+      body.x = inc > 0 ? Math.max(startX, hit.x - body.w) : Math.min(startX, hit.x + hit.w);
       return { moved: body.x - startX, hit };
     }
   }
@@ -130,7 +133,7 @@ export function moveX(state, body, dx, opts = {}) {
 export function moveY(state, body, dy, opts = {}) {
   const startY = body.y;
   if (!dy) return { moved: 0, hit: null };
-  const solids = solidsFor(state, body, sweepArea(body, 0, dy), opts).filter((s) => !overlap(s, body));
+  const solids = solidsFor(state, body, sweepArea(body, 0, dy), opts).filter((s) => !deepOverlap(s, body));
   const steps = Math.ceil(Math.abs(dy) / SUBSTEP);
   const inc = dy / steps;
   for (let k = 0; k < steps; k++) {
@@ -139,11 +142,11 @@ export function moveY(state, body, dy, opts = {}) {
     let hit = null;
     for (const s of solids) {
       if (s.oneWay && (inc < 0 || prevBottom > s.y + 0.01)) continue;
-      if (!overlap(s, body)) continue;
+      if (!deepOverlap(s, body, HAIRLINE)) continue;
       if (inc > 0 ? !hit || s.y < hit.y : !hit || s.y + s.h > hit.y + hit.h) hit = s;
     }
     if (hit) {
-      body.y = inc > 0 ? hit.y - body.h : hit.y + hit.h;
+      body.y = inc > 0 ? Math.max(startY, hit.y - body.h) : Math.min(startY, hit.y + hit.h);
       if (inc > 0) {
         body.grounded = true;
         body.support = hit.ref;

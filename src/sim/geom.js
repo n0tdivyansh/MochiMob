@@ -20,3 +20,8 @@ export function hOverlapLen(a, b) {
 export function vOverlapLen(a, b) {
   return Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
 }
+
+// Overlap deeper than eps on both axes (hairline float overlaps are contacts, not penetration).
+export function deepOverlap(a, b, eps = 0.01) {
+  return a.x < b.x + b.w - eps && a.x + a.w > b.x + eps && a.y < b.y + b.h - eps && a.y + a.h > b.y + eps;
+}
