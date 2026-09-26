@@ -1,6 +1,7 @@
 import { controlBlob } from './blob.js';
 import { integrate } from './physics.js';
 import { computePushes, moveLifts } from './objects.js';
+import { updatePlates, updateGates, updatePaint, recoverCrates } from './logic.js';
 
 function normalizeInputs(state, inputs) {
   const out = new Array(state.n).fill(0);
@@ -25,6 +26,10 @@ export function step(state, inputs) {
 
   computePushes(state);
   integrate(state, moveLifts);
+  updatePlates(state);
+  updateGates(state);
+  updatePaint(state);
+  recoverCrates(state);
 
   for (const b of state.blobs) b.prev = bits[b.i];
   state.tick++;
