@@ -144,3 +144,27 @@ describe('follow AI pushing', () => {
     expect(s.crates[0].x).toBeGreaterThan(8 * 64 + 60);
   });
 });
+
+describe('follow AI and jumping leaders', () => {
+  it('does not jump after a leader who is still in the air over a pit', () => {
+    let map = ROOM;
+    map = put(map, 8, 5, '.');
+    map = put(map, 9, 5, '.');
+    map = put(map, 10, 5, '.');
+    const s = solo(map);
+    const [a, b] = s.blobs;
+    a.x = 6 * 64 - 70;
+    b.x = 6 * 64;
+    soloCommand(s, 1);
+    settle(s);
+    soloCommand(s, 'follow');
+    const ev = runEvents(s, 120, (t, st) => {
+      const lead = st.blobs[1];
+      return lead.x + lead.w > 500 && lead.x < 620 ? RIGHT | INPUT.JUMP : RIGHT;
+    });
+    expect(ev.some((e) => e.type === 'die' && e.i === 1)).toBe(false);
+    expect(b.x).toBeGreaterThan(11 * 64);
+    expect(ev.some((e) => e.type === 'die' && e.i === 0)).toBe(false);
+    expect(a.x + a.w).toBeLessThanOrEqual(8 * 64 + 12);
+  });
+});

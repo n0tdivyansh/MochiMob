@@ -90,7 +90,8 @@ function followBits(state, b, t) {
       if (!staticBlocked(state, b, high)) wantJump = true;
     }
   }
-  if (t.y + t.h < b.y + b.h - 40 && Math.abs(dx) < 160) wantJump = true;
+  // Only hop up to a leader who is standing on something (never chase a mid-air jump).
+  if (t.grounded && t.y + t.h < b.y + b.h - 40 && Math.abs(dx) < 160) wantJump = true;
   if (wantJump && canStartJump) {
     ai.jumpT = JUMP_HOLD;
     bits |= INPUT.JUMP;
