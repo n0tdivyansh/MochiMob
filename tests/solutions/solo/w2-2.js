@@ -1,0 +1,17 @@
+export default () => [
+  { do: 'swap', to: 1 },
+  { do: 'walk', p: 1, to: 13 },
+  { do: 'swap', to: 0 },
+  { do: 'walk', p: 0, to: 12 },
+  { do: 'until', label: 'latched', test: (s) => s.plates[0].latched },
+  { do: 'swap', to: 1 },
+  { do: 'walk', p: 1, to: 27, hop: true },
+  { do: 'swap', to: 0 },
+  { do: 'walk', p: 0, to: 25, hop: true },
+  { do: 'walkJump', p: 0, to: 27, at: 26 },
+  { do: 'jump', p: 0 },
+  { do: 'until', label: 'key', test: (s) => s.key.holder === 0 },
+  { do: 'walk', p: 0, to: 39 },
+  { do: 'enter', p: 0 },
+  { do: 'enter', p: 1 },
+];

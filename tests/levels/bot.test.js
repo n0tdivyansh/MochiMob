@@ -72,3 +72,24 @@ describe('bot', () => {
     expect(r.reason).toMatch(/active/);
   });
 });
+
+describe('bot composition', () => {
+  it('seq runs steps in order and dyn builds steps from live state', () => {
+    const s = createWorld(TINY, 2);
+    let seenX = null;
+    const script = [
+      {
+        do: 'dyn',
+        make: (st) => {
+          seenX = st.blobs[1].x;
+          return [{ do: 'seq', steps: [{ do: 'walk', p: 1, to: 6 }, { do: 'walk', p: 1, to: 8 }] }];
+        },
+      },
+      { do: 'until', test: (st) => Math.abs(st.blobs[1].x + 26 - (8 * 64 + 32)) < 6 },
+    ];
+    const r = runScript(s, script, { maxTicks: 600 });
+    expect(seenX).toBe(createWorld(TINY, 2).blobs[1].x);
+    expect(r.reason).toBe('script ended without clear');
+    expect(Math.abs(s.blobs[1].x + 26 - (8 * 64 + 32))).toBeLessThan(6);
+  });
+});

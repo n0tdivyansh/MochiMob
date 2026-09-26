@@ -1,0 +1,17 @@
+export default () => [
+  { do: 'swap', to: 1 },
+  { do: 'walk', p: 1, to: 17 },
+  { do: 'swap', to: 0 },
+  { do: 'walk', p: 0, to: 16 },
+  { do: 'swap', to: 1 },
+  { do: 'until', label: 'shutter open', test: (s) => s.gates[0].open >= 1 },
+  { do: 'walk', p: 1, to: 24 },
+  { do: 'swap', to: 0 },
+  { do: 'walk', p: 0, to: 30.5, hop: true },
+  { do: 'jump', p: 0 },
+  { do: 'until', label: 'key', test: (s) => s.key.holder === 0 },
+  { do: 'walk', p: 0, to: 35, hop: true },
+  { do: 'enter', p: 0 },
+  { do: 'walk', p: 1, to: 35, hop: true },
+  { do: 'enter', p: 1 },
+];

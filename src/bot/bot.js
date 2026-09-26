@@ -115,6 +115,7 @@ function makeAction(st) {
       return { ...base, tick: aging((ctx) => !!st.test(ctx.state)) };
     case 'enter': {
       let pressedAt = -10;
+      let hopT = 0;
       return {
         ...base,
         tick: aging((ctx) => {
@@ -125,7 +126,19 @@ function makeAction(st) {
           const dx = d.x + d.w / 2 - cx(b);
           if (Math.abs(dx) > 10 || !b.grounded) {
             const brake = (b.vx * b.vx) / (2 * FRICTION);
-            ctx.press(st.p, Math.abs(dx) > 6 + brake ? dirBits(dx) : 0);
+            let bits = Math.abs(dx) > 6 + brake ? dirBits(dx) : 0;
+            if (hopT > 0) {
+              hopT--;
+              bits |= JUMP;
+            } else if (bits && b.grounded && !(b.prev & JUMP)) {
+              const d = Math.sign(dx);
+              const front = { x: d > 0 ? b.x + b.w : b.x - 3, y: b.y + 4, w: 3, h: b.h - 8 };
+              if (solidsFor(ctx.state, b, front).some((r) => !r.oneWay)) {
+                hopT = 21;
+                bits |= JUMP;
+              }
+            }
+            ctx.press(st.p, bits);
             return false;
           }
           if (ctx.state.door.open && ctx.tick - pressedAt > 2 && !(b.prev & UP)) {
@@ -168,6 +181,32 @@ function makeAction(st) {
           return done.every(Boolean);
         },
       };
+    }
+    case 'seq':
+    case 'dyn': {
+      // seq: run child steps one after another. dyn: build the child steps from
+      // the live state the first time this step runs.
+      let kids = null;
+      let cur = null;
+      const self = {
+        ...base,
+        label: st.label ? `${st.do} ${st.label}` : st.do,
+        timedOut: () => !!cur && cur.timedOut(),
+        tick: (ctx) => {
+          if (!kids) kids = (st.do === 'dyn' ? st.make(ctx.state) : st.steps).slice();
+          for (let guard = 0; guard < 50; guard++) {
+            if (!cur) {
+              if (kids.length === 0) return true;
+              cur = makeAction(kids.shift());
+              self.label = `${st.do} > ${cur.label}`;
+            }
+            if (!cur.tick(ctx)) return false;
+            cur = null;
+          }
+          return false;
+        },
+      };
+      return self;
     }
     case 'call':
       return { ...base, tick: aging((ctx) => st.fn(ctx.state) !== false) };

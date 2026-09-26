@@ -1,0 +1,15 @@
+export default () => [
+  { do: 'swap', to: 1 },
+  { do: 'walk', p: 1, to: 9 },
+  { do: 'swap', to: 0 },
+  { do: 'walk', p: 0, to: 7 },
+  { do: 'walkJump', p: 0, to: 9, at: 8 },
+  { do: 'jump', p: 0 },
+  { do: 'until', label: 'key', test: (s) => s.key.holder === 0 },
+  { do: 'walk', p: 0, to: 24 },
+  { do: 'follow', on: true },
+  { do: 'until', label: 'lift at top', test: (s) => s.lifts[0].t >= 1 },
+  { do: 'enter', p: 0 },
+  { do: 'follow', on: false },
+  { do: 'enter', p: 1 },
+];
