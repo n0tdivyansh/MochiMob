@@ -6,7 +6,7 @@ function makeBlob(i, sp) {
     kind: 'blob', i, x: sp.x, y: sp.y, w: BLOB_W, h: BLOB_H, vx: 0, vy: 0,
     color: i, alive: true, deadT: 0, squish: false, grounded: false, support: null,
     coyote: 0, jumpBuf: 0, cut: false, bounced: false, facing: 1, inDoor: false,
-    prev: 0, lastSafe: { x: sp.x, y: sp.y }, mx: 0, my: 0, ai: { jumpT: 0 }, landT: 0, airT: 0,
+    prev: 0, lastSafe: { x: sp.x, y: sp.y }, dir: 0, mx: 0, my: 0, ai: { jumpT: 0 }, landT: 0, airT: 0,
   };
 }
 
@@ -73,7 +73,7 @@ export function createWorld(def, n, { solo = false } = {}) {
         const ax = e.ax ?? e.x;
         const ay = e.ay ?? e.y;
         s.lifts.push({
-          kind: 'lift', id: e.id ?? `lift${s.lifts.length}`, x: ax, y: ay, w: e.w, h,
+          kind: 'lift', idx: s.lifts.length, id: e.id ?? `lift${s.lifts.length}`, x: ax, y: ay, w: e.w, h,
           ax, ay, bx: e.bx ?? ax, by: e.by ?? ay, t: 0, dir: 1, mode: e.mode ?? 'loop',
           need: e.need ?? 1, link: e.link ?? [], speed: e.speed ?? 120, mx: 0, my: 0, riders: 0,
         });

@@ -44,6 +44,7 @@ export function controlBlob(state, b, bits, pressed) {
     setSquish(state, b, true);
   }
   if (b.squish) dir = 0;
+  b.dir = dir;
 
   if (dir !== 0) {
     b.facing = dir;

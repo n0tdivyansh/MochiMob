@@ -99,12 +99,13 @@ function horizontalHit(body, hit) {
 
 // Move every dynamic body one tick: gravity, carry, vertical then horizontal sweep.
 // Bodies are processed bottom-up so supports move before their riders.
-export function integrate(state) {
+export function integrate(state, kinematic) {
   const bodies = dynamicBodies(state);
   for (const b of bodies) {
     b.mx = 0;
     b.my = 0;
   }
+  if (kinematic) kinematic(state);
   const moved = new Set();
   bodies.sort((a, b) => b.y + b.h - (a.y + a.h));
   const g = GRAVITY * DT;
