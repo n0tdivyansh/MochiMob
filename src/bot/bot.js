@@ -3,7 +3,7 @@
 import { step } from '../sim/step.js';
 import { solidsFor } from '../sim/collide.js';
 import { soloCommand } from '../sim/solo.js';
-import { INPUT, TILE, FRICTION } from '../sim/constants.js';
+import { INPUT, TILE, FRICTION, ACCEL_AIR } from '../sim/constants.js';
 
 const { LEFT, RIGHT, JUMP, UP, SQUISH } = INPUT;
 const DEFAULT_TIMEOUT = 1200;
@@ -53,17 +53,21 @@ function makeAction(st) {
             jumpT--;
             bits |= JUMP;
           }
-          const brake = (b.vx * b.vx) / (2 * FRICTION);
+          // On the ground friction stops us; in the air we must counter-steer.
+          const decel = b.grounded ? FRICTION : ACCEL_AIR;
+          const brake = (b.vx * b.vx) / (2 * decel);
+          const towards = Math.sign(b.vx) === Math.sign(dx);
           if (Math.abs(dx) > tol + brake) bits |= dirBits(dx);
+          else if (!towards && Math.abs(dx) > tol) bits |= dirBits(dx);
+          else if (!b.grounded && towards && Math.abs(b.vx) > 40) bits |= dirBits(-dx);
           if (st.hop && jumpT === 0 && b.grounded && !(b.prev & JUMP) && Math.abs(dx) > TILE / 2) {
             const d = Math.sign(dx);
             const front = { x: d > 0 ? b.x + b.w : b.x - 3, y: b.y + 4, w: 3, h: b.h - 8 };
             if (solidsFor(ctx.state, b, front).some((r) => !r.oneWay)) {
-              jumpT = 16;
+              jumpT = 21;
               bits |= JUMP;
             }
           }
-          else if (Math.sign(b.vx) === -Math.sign(dx) && Math.abs(dx) > tol) bits |= dirBits(dx);
           ctx.press(st.p, bits);
           const settled = Math.abs(dx) <= tol + 1 && Math.abs(b.vx) < 40 && b.grounded;
           return settled && (st.do === 'walk' || jumped) && jumpT === 0;
