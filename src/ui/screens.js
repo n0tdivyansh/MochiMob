@@ -51,7 +51,7 @@ export function createScreens(app) {
       ui.show(
         `<div class="card">
           <h2>Solo</h2>
-          <p class="muted">${n === 1 ? 'Just you: <strong>Solo Trials</strong> are 8 levels built for a single mochi.' : 'Lead a whole team of mochi yourself through the co-op levels. Switch between them, or have the others follow you.'}</p>
+          <p class="muted">${n === 1 ? `Just you: <strong>Solo Trials</strong> are ${app.trials.length} levels built for a single mochi.` : 'Lead a whole team of mochi yourself through the co-op levels. Switch between them, or have the others follow you.'}</p>
           <div class="row" style="margin:14px 0">
             <strong style="font-size:22px">Team size</strong>
             ${[1, 2, 3, 4].map((k) => `<button class="choice ${k === n ? 'on' : ''}" data-nav data-n="${k}">${k}</button>`).join('')}
@@ -59,7 +59,7 @@ export function createScreens(app) {
           <div class="keys">
             <span><kbd>A</kbd> <kbd>D</kbd> / <kbd>←</kbd> <kbd>→</kbd></span><span>Move</span>
             <span><kbd>W</kbd> / <kbd>↑</kbd></span><span>Jump, or enter an open door</span>
-            <span><kbd>S</kbd> / <kbd>↓</kbd></span><span>Squish (friends bounce off you)</span>
+            <span><kbd>S</kbd> / <kbd>↓</kbd></span><span>Squish & crawl (friends bounce off you)</span>
             <span><kbd>Q</kbd> <kbd>E</kbd> / <kbd>1</kbd>-<kbd>4</kbd></span><span>Switch mochi</span>
             <span><kbd>F</kbd></span><span>Follow me on / off</span>
             <span><kbd>Esc</kbd></span><span>Pause</span>

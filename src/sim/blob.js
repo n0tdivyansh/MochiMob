@@ -43,14 +43,14 @@ export function controlBlob(state, b, bits, pressed) {
   } else if (bits & INPUT.SQUISH && b.grounded) {
     setSquish(state, b, true);
   }
-  if (b.squish) dir = 0;
   b.dir = dir;
 
   if (dir !== 0) {
     b.facing = dir;
+    const speed = b.squish ? 180 : RUN;
     const accel = b.grounded ? ACCEL_GROUND : ACCEL_AIR;
     const turning = Math.sign(b.vx) === -dir;
-    b.vx = approach(b.vx, dir * RUN, (turning && b.grounded ? accel + FRICTION : accel) * DT);
+    b.vx = approach(b.vx, dir * speed, (turning && b.grounded ? accel + FRICTION : accel) * DT);
   } else {
     b.vx = approach(b.vx, 0, (b.grounded ? FRICTION : AIR_DRAG) * DT);
   }

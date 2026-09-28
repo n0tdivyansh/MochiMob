@@ -105,16 +105,18 @@ describe('blob movement', () => {
     expect(s.blobs[1].vx).toBeCloseTo(380, 5);
   });
 
-  it('squish shrinks to 24 tall, keeps bottom and cannot move', () => {
+  it('squish shrinks to 24 tall, keeps bottom, stays still when idle and crawls when steering', () => {
     const s = settle(world());
     const b = s.blobs[0];
     const bottom = b.y + b.h;
     const x = b.x;
-    run(s, 10, () => [SQUISH | RIGHT, 0]);
+    run(s, 10, () => [SQUISH, 0]);
     expect(b.squish).toBe(true);
     expect(b.h).toBe(24);
     expect(b.y + b.h).toBeCloseTo(bottom, 5);
     expect(b.x).toBe(x);
+    run(s, 10, () => [SQUISH | RIGHT, 0]);
+    expect(b.x).toBeGreaterThan(x);
     run(s, 3, () => [0, 0]);
     expect(b.squish).toBe(false);
     expect(b.h).toBe(48);
