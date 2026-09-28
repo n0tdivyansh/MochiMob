@@ -95,7 +95,7 @@ describe('camera span limit', () => {
     const s = world(WIDE);
     settle(s);
     const cam = cameraTarget(s);
-    expect(cam.zoom).toBeLessThanOrEqual(1);
+    expect(cam.zoom).toBeLessThanOrEqual(1.25);
     expect(cam.zoom).toBeGreaterThanOrEqual(0.65);
     const halfW = 1920 / cam.zoom / 2;
     expect(cam.x - halfW).toBeGreaterThanOrEqual(0);
@@ -115,5 +115,13 @@ describe('camera span limit', () => {
     const halfW = 1920 / cam.zoom / 2;
     const cx = s.blobs[1].x + s.blobs[1].w / 2;
     expect(Math.abs(cx - cam.x)).toBeLessThanOrEqual(halfW * 0.6);
+  });
+});
+
+describe('camera zoom', () => {
+  it('zooms in to 1.25 when the team is bunched together', () => {
+    const s = world(WIDE);
+    settle(s);
+    expect(cameraTarget(s).zoom).toBeCloseTo(1.25, 5);
   });
 });

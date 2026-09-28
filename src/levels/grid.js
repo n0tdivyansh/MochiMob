@@ -1,4 +1,4 @@
-// Tiny builder for level maps: start from an empty bordered box, then paint.
+// Tiny builder for level maps: side walls, open sky on top; then paint.
 export class Grid {
   constructor(w, h) {
     this.w = w;
@@ -6,7 +6,7 @@ export class Grid {
     this.cells = [];
     for (let y = 0; y < h; y++) {
       const row = [];
-      for (let x = 0; x < w; x++) row.push(x === 0 || x === w - 1 || y === 0 ? '#' : '.');
+      for (let x = 0; x < w; x++) row.push(x === 0 || x === w - 1 ? '#' : '.');
       this.cells.push(row);
     }
   }

@@ -3,6 +3,7 @@ import { MAX_SPAN_X } from './constants.js';
 export const VIEW_W = 1920;
 export const VIEW_H = 1080;
 export const MIN_ZOOM = 0.65;
+export const MAX_ZOOM = 1.25;
 const MARGIN_X = 300;
 const MARGIN_Y = 220;
 
@@ -33,7 +34,7 @@ function clampAxis(center, half, size) {
 function frame(state, box) {
   const w = box.maxX - box.minX + MARGIN_X * 2;
   const h = box.maxY - box.minY + MARGIN_Y * 2;
-  let zoom = Math.min(1, VIEW_W / w, VIEW_H / h);
+  let zoom = Math.min(MAX_ZOOM, VIEW_W / w, VIEW_H / h);
   zoom = Math.max(MIN_ZOOM, zoom);
   const halfW = VIEW_W / zoom / 2;
   const halfH = VIEW_H / zoom / 2;
@@ -41,7 +42,6 @@ function frame(state, box) {
     x: clampAxis((box.minX + box.maxX) / 2, halfW, state.static.W),
     y: clampAxis((box.minY + box.maxY) / 2, halfH, state.static.H),
     zoom,
-    fit: zoom * w >= VIEW_W - 1e-6 ? zoom === Math.min(1, VIEW_W / w, VIEW_H / h) : true,
   };
 }
 
