@@ -14,7 +14,8 @@ export function validate(def, n) {
     return [...errors, e.message];
   }
   const { W, H } = L.static;
-  const plateIds = new Set(L.entities.filter((e) => e.type === 'plate').map((e) => e.id));
+  // Links may name plates that only exist for bigger teams (minPlayers).
+  const plateIds = new Set((def.entities || []).filter((e) => e.type === 'plate').map((e) => e.id));
   for (const e of L.entities) {
     if (e.x < 0 || e.y < 0 || e.x + e.w > W || e.y + e.h > H) errors.push(`${e.type} ${e.id ?? ''} out of bounds`);
     if (e.type === 'plate' && !e.id) errors.push('plate without id');

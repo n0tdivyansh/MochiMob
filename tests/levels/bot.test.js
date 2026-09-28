@@ -93,3 +93,21 @@ describe('bot composition', () => {
     expect(Math.abs(s.blobs[1].x + 26 - (8 * 64 + 32))).toBeLessThan(6);
   });
 });
+
+import { validate } from '../../src/levels/validate.js';
+
+describe('validator', () => {
+  it('allows links to plates that only exist for bigger teams', () => {
+    const def = { ...TINY, entities: [
+      { type: 'plate', id: 'a', x: 2, y: 5 },
+      { type: 'plate', id: 'b', x: 3, y: 5, minPlayers: 4 },
+      { type: 'gate', id: 'g', x: 15, y: 1, h: 5, link: ['a', 'b'], mode: 'all' },
+    ] };
+    expect(validate(def, 2)).toEqual([]);
+  });
+
+  it('still rejects links to plates that never exist', () => {
+    const def = { ...TINY, entities: [{ type: 'gate', id: 'g', x: 15, y: 1, h: 5, link: ['nope'] }] };
+    expect(validate(def, 2).join()).toMatch(/nope/);
+  });
+});
