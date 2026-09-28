@@ -168,3 +168,25 @@ describe('follow AI and jumping leaders', () => {
     expect(a.x + a.w).toBeLessThanOrEqual(8 * 64 + 12);
   });
 });
+
+describe('team of one', () => {
+  it('a single mochi can play solo: move, take the key, enter and clear', () => {
+    const s = world(ROOM, [], 1, { solo: true });
+    expect(s.blobs.length).toBe(1);
+    s.door.open = true;
+    s.key.holder = -2;
+    s.blobs[0].x = 17 * 64 + 6;
+    settle(s);
+    const ev = runEvents(s, 1, () => UP);
+    expect(ev.some((e) => e.type === 'clear')).toBe(true);
+  });
+
+  it('switching and follow are harmless with one mochi', () => {
+    const s = world(ROOM, [], 1, { solo: true });
+    soloCommand(s, 'next');
+    soloCommand(s, 'follow');
+    run(s, 10, () => RIGHT);
+    expect(s.solo.active).toBe(0);
+    expect(s.blobs[0].x).toBeGreaterThan(70);
+  });
+});

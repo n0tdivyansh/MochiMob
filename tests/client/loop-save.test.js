@@ -82,3 +82,22 @@ describe('save data', () => {
     expect(createSave(store, LEVELS).settings.music).toBe(0.2);
   });
 });
+
+describe('separate unlock chains', () => {
+  const MIXED = [
+    { id: 'a', par: 60, gold: 30 },
+    { id: 'b', par: 60, gold: 30 },
+    { id: 't1', par: 60, gold: 30, trial: true },
+    { id: 't2', par: 60, gold: 30, trial: true },
+  ];
+
+  it('the first trial is open from the start and trials unlock among themselves', () => {
+    const save = createSave(memoryStorage(), MIXED);
+    expect(save.isUnlocked('t1')).toBe(true);
+    expect(save.isUnlocked('t2')).toBe(false);
+    save.recordClear('solo', 'b', 100);
+    expect(save.isUnlocked('t2')).toBe(false);
+    save.recordClear('solo', 't1', 100);
+    expect(save.isUnlocked('t2')).toBe(true);
+  });
+});

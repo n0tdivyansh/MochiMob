@@ -19,6 +19,10 @@ import w43 from './w4-3.js';
 import w44 from './w4-4.js';
 import w45 from './w4-5.js';
 
+import { TRIALS, TRIAL_WORLD } from './trials.js';
+
+export { TRIALS, TRIAL_WORLD };
+
 export const WORLDS = [
   { id: 1, name: 'Puddle Meadow', theme: 'meadow' },
   { id: 2, name: 'Tinker Works', theme: 'works' },
@@ -29,10 +33,14 @@ export const WORLDS = [
 export const LEVELS = [w11, w12, w13, w14, w15, w21, w22, w23, w24, w25, w31, w32, w33, w34, w35, w41, w42, w43, w44, w45];
 
 export function getLevel(id) {
-  return LEVELS.find((l) => l.id === id) ?? null;
+  return LEVELS.find((l) => l.id === id) ?? TRIALS.find((l) => l.id === id) ?? null;
 }
 
+// Next level in the same chain (team levels and trials are separate).
 export function nextLevelId(id) {
-  const i = LEVELS.findIndex((l) => l.id === id);
-  return i >= 0 && i + 1 < LEVELS.length ? LEVELS[i + 1].id : null;
+  for (const list of [LEVELS, TRIALS]) {
+    const i = list.findIndex((l) => l.id === id);
+    if (i >= 0) return i + 1 < list.length ? list[i + 1].id : null;
+  }
+  return null;
 }

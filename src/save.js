@@ -50,9 +50,13 @@ export function createSave(storage, levels) {
       Object.assign(settings, patch);
       write();
     },
+    // Team levels and one-mochi trials each unlock in their own chain.
     isUnlocked(id) {
-      const i = levels.findIndex((l) => l.id === id);
-      return i === 0 || (i > 0 && cleared(levels[i - 1].id));
+      const def = levels.find((l) => l.id === id);
+      if (!def) return false;
+      const chain = levels.filter((l) => !!l.trial === !!def.trial);
+      const i = chain.indexOf(def);
+      return i === 0 || cleared(chain[i - 1].id);
     },
     isCleared: cleared,
     starsFor(mode, id) {

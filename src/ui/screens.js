@@ -51,10 +51,10 @@ export function createScreens(app) {
       ui.show(
         `<div class="card">
           <h2>Solo</h2>
-          <p class="muted">Lead a whole team of mochi yourself. Switch between them, or have the others follow you.</p>
+          <p class="muted">${n === 1 ? 'Just you: <strong>Solo Trials</strong> are 8 levels built for a single mochi.' : 'Lead a whole team of mochi yourself through the co-op levels. Switch between them, or have the others follow you.'}</p>
           <div class="row" style="margin:14px 0">
             <strong style="font-size:22px">Team size</strong>
-            ${[2, 3, 4].map((k) => `<button class="choice ${k === n ? 'on' : ''}" data-nav data-n="${k}">${k}</button>`).join('')}
+            ${[1, 2, 3, 4].map((k) => `<button class="choice ${k === n ? 'on' : ''}" data-nav data-n="${k}">${k}</button>`).join('')}
           </div>
           <div class="keys">
             <span><kbd>A</kbd> <kbd>D</kbd> / <kbd>←</kbd> <kbd>→</kbd></span><span>Move</span>
@@ -130,22 +130,26 @@ export function createScreens(app) {
     map() {
       app.screen = 'map';
       app.audio.play('title');
-      const world = app.world ?? 1;
+      // A team of one plays the Solo Trials; teams of 2-4 play the co-op worlds.
+      const trials = app.mode === 'solo' && app.n === 1;
+      const worlds = trials ? [app.trialWorld] : app.worlds;
+      if (!worlds.some((w) => w.id === app.world)) app.world = worlds[0].id;
+      const world = app.world;
       const levels = app.levels.filter((l) => l.world === world);
       const worldOpen = (w) => app.save.isUnlocked(app.levels.find((l) => l.world === w).id);
-      const who = app.mode === 'solo' ? `Solo · team of ${app.n}` : `Co-op · ${app.n} players`;
+      const who = app.mode === 'solo' ? (trials ? 'Solo · just you' : `Solo · team of ${app.n}`) : `Co-op · ${app.n} players`;
       ui.show(
         `<div class="card">
-          <div class="spread"><h2>${esc(app.worlds[world - 1].name)}</h2><span class="muted" style="font-weight:700">${who}</span></div>
-          <div class="worlds">${app.worlds
-            .map((w) => `<button class="btn small ${w.id === world ? 'primary' : ''}" data-nav data-world="${w.id}" ${worldOpen(w.id) ? '' : 'disabled'}>${w.id}. ${esc(w.name)}</button>`)
+          <div class="spread"><h2>${esc(worlds.find((w) => w.id === world).name)}</h2><span class="muted" style="font-weight:700">${who}</span></div>
+          <div class="worlds">${worlds
+            .map((w) => `<button class="btn small ${w.id === world ? 'primary' : ''}" data-nav data-world="${w.id}" ${worldOpen(w.id) ? '' : 'disabled'}>${trials ? "" : `${w.id}. `}${esc(w.name)}</button>`)
             .join('')}</div>
           <div class="levels">${levels
             .map((l, k) => {
               const open = app.save.isUnlocked(l.id);
               const best = app.save.bestFor(mode(), l.id);
               return `<button class="level ${open ? '' : 'locked'}" data-nav data-level="${l.id}" ${open ? '' : 'disabled'}>
-                <span class="num">${open ? `${world}-${k + 1}` : '🔒'}</span>
+                <span class="num">${open ? (trials ? `T${k + 1}` : `${world}-${k + 1}`) : "🔒"}</span>
                 <span class="name">${esc(l.name)}</span>
                 <span class="stars">${open ? starRow(app.save.starsFor(mode(), l.id)) : ''}</span>
                 <span class="best">${best ? fmt(best) : '&nbsp;'}</span>

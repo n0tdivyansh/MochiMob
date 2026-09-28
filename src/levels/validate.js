@@ -3,7 +3,7 @@ import { createWorld } from '../sim/world.js';
 import { overlapsSolid } from '../sim/collide.js';
 
 // Structural checks for a level definition at player count n. Returns error strings.
-export function validate(def, n) {
+export function validate(def, n, { solo = false } = {}) {
   const errors = [];
   for (const f of ['id', 'name', 'world', 'par', 'gold']) if (def[f] === undefined) errors.push(`missing ${f}`);
   if (def.gold !== undefined && def.par !== undefined && !(def.gold > 0 && def.gold < def.par)) errors.push('need 0 < gold < par');
@@ -27,7 +27,7 @@ export function validate(def, n) {
     }
   }
   try {
-    const s = createWorld(def, n);
+    const s = createWorld(def, n, { solo });
     for (const b of s.blobs) if (overlapsSolid(s, b)) errors.push(`spawn ${b.i} overlaps a solid`);
     for (const c of s.crates) if (overlapsSolid(s, c)) errors.push(`crate ${c.id} overlaps a solid`);
   } catch (e) {

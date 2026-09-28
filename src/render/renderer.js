@@ -54,7 +54,7 @@ export function createRenderer(canvas) {
   }
 
   function setLevel(def, state) {
-    const themeName = THEME_OF_WORLD[def.world] ?? 'meadow';
+    const themeName = def.theme ?? THEME_OF_WORLD[def.world] ?? 'meadow';
     const theme = THEMES[themeName];
     const { canvas: tiles, conveyors } = bakeTiles(state.static, themeName, theme);
     level = { def, themeName, theme, tiles, conveyors };
@@ -153,7 +153,7 @@ export function createRenderer(canvas) {
       ctx.fill();
     }
 
-    if (s.solo) {
+    if (s.solo && s.blobs.length > 1) {
       s.blobs.forEach((b, k) => {
         const x = 40 + k * 86;
         const y = VH - 70;

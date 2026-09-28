@@ -3,7 +3,7 @@ import { createRenderer } from './render/renderer.js';
 import { createInput } from './input/devices.js';
 import { createSession } from './game/session.js';
 import { createLoop } from './game/loop.js';
-import { LEVELS, WORLDS, getLevel, nextLevelId } from './levels/index.js';
+import { LEVELS, WORLDS, TRIALS, TRIAL_WORLD, getLevel, nextLevelId } from './levels/index.js';
 import { createAudio } from './audio/audio.js';
 import { THEME_OF_WORLD } from './render/themes.js';
 import { createSave } from './save.js';
@@ -20,7 +20,8 @@ try {
   storage = null;
 }
 
-const save = createSave(storage, LEVELS);
+const ALL_LEVELS = [...LEVELS, ...TRIALS];
+const save = createSave(storage, ALL_LEVELS);
 const canvas = document.getElementById('game');
 const renderer = createRenderer(canvas);
 const input = createInput(window);
@@ -35,8 +36,9 @@ const app = {
   audio,
   renderer,
   ui,
-  levels: LEVELS,
+  levels: ALL_LEVELS,
   worlds: WORLDS,
+  trialWorld: TRIAL_WORLD,
   mode: 'solo',
   n: 2,
   devices: [],
@@ -91,10 +93,10 @@ app.startLevel = (id) => {
   app.world = def.world;
   app.clearWait = -1;
   renderer.setLevel(def, app.session.state);
-  audio.play(THEME_OF_WORLD[def.world]);
+  audio.play(def.theme ?? THEME_OF_WORLD[def.world]);
   ui.hide();
   app.screen = 'playing';
-  if (app.mode === 'solo' && !save.settings.soloTipSeen) {
+  if (app.mode === 'solo' && app.n > 1 && !save.settings.soloTipSeen) {
     app.session.paused = true;
     screens.soloTip();
   }
@@ -279,7 +281,7 @@ resetDemo();
 const params = new URLSearchParams(location.search);
 const deep = params.get('play');
 if (deep && getLevel(deep)) {
-  const n = Math.max(2, Math.min(4, Number(params.get('n')) || 2));
+  const n = getLevel(deep).trial ? 1 : Math.max(2, Math.min(4, Number(params.get('n')) || 2));
   const mode = params.get('mode') === 'local' ? 'local' : 'solo';
   app.setMode(mode, n, Array.from({ length: n }, (_, slot) => ({ kind: 'kb', slot })));
   app.startLevel(deep);

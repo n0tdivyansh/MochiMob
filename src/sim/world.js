@@ -12,7 +12,8 @@ function makeBlob(i, sp) {
 
 // Build a fresh simulation state for `def` played by `n` players (or an n-blob solo team).
 export function createWorld(def, n, { solo = false } = {}) {
-  if (!(n >= 2 && n <= 4)) throw new Error(`player count must be 2-4, got ${n}`);
+  // A team of one only exists in solo; co-op always has 2-4 players.
+  if (!(n >= (solo ? 1 : 2) && n <= 4)) throw new Error(`player count must be ${solo ? 1 : 2}-4, got ${n}`);
   const L = parseLevel(def, n);
   const s = {
     v: 1,
