@@ -4,6 +4,8 @@ import { createInput } from './input/devices.js';
 import { createSession } from './game/session.js';
 import { createLoop } from './game/loop.js';
 import { getLevel, LEVELS } from './levels/index.js';
+import { createAudio } from './audio/audio.js';
+import { THEME_OF_WORLD } from './render/themes.js';
 
 const params = new URLSearchParams(location.search);
 const def = getLevel(params.get('level') || 'w1-1') || LEVELS[0];
@@ -16,6 +18,11 @@ const input = createInput(window);
 const devices = mode === 'solo' ? [{ kind: 'kb', slot: 0 }, { kind: 'kb', slot: 1 }] : Array.from({ length: n }, (_, i) => ({ kind: 'kb', slot: i }));
 const session = createSession({ def, n, mode, devices });
 renderer.setLevel(def, session.state);
+const audio = createAudio();
+audio.play(THEME_OF_WORLD[def.world]);
+const unlockAudio = () => audio.init();
+window.addEventListener('keydown', unlockAudio);
+window.addEventListener('pointerdown', unlockAudio);
 
 
 let lastDraw = performance.now();
@@ -24,6 +31,7 @@ const loop = createLoop({
     input.poll();
     const events = session.update(input, input.drainPressed());
     renderer.onEvents(session.state, events);
+    audio.events(events);
   },
   render(alpha) {
     const now = performance.now();
@@ -32,4 +40,4 @@ const loop = createLoop({
   },
 });
 loop.start();
-window.__mochi = { session, loop, renderer };
+window.__mochi = { session, loop, renderer, audio };
