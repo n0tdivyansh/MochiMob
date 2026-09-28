@@ -153,6 +153,16 @@ export function createRenderer(canvas) {
       ctx.fill();
     }
 
+    if (level.def.hint) {
+      ctx.font = '600 20px "Baloo 2", system-ui, sans-serif';
+      const hintText = `💡 ${level.def.hint}`;
+      const hw = ctx.measureText(hintText).width + 40;
+      pill(28, 88, hw, 44, 'rgba(40,25,55,0.65)');
+      ctx.fillStyle = '#ffe58a';
+      ctx.textAlign = 'left';
+      ctx.fillText(hintText, 48, 110);
+    }
+
     if (s.solo && s.blobs.length > 1) {
       s.blobs.forEach((b, k) => {
         const x = 40 + k * 86;
@@ -192,7 +202,7 @@ export function createRenderer(canvas) {
       ctx.fillStyle = '#ffffff';
       ctx.strokeStyle = 'rgba(40,25,55,0.55)';
       ctx.lineWidth = 5;
-      const tip = 'Q / E  switch mochi   ·   F  follow';
+      const tip = 'Q / E  switch mochi   ·   S  squish to bounce   ·   F  follow';
       ctx.strokeText(tip, fx + 206, VH - 70);
       ctx.fillText(tip, fx + 206, VH - 70);
     }
