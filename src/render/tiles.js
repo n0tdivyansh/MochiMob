@@ -34,7 +34,7 @@ function shadeBand(ctx, x0, y0, x1, y1) {
   return g;
 }
 
-function drawSolid(ctx, st, c, r, th, trimTheme, low = false) {
+function drawSolid(ctx, st, c, r, th, trimTheme, low = false, isConveyor = false) {
   const x = c * TILE;
   const y = r * TILE;
   const h = low ? LOW_H : TILE;
@@ -70,9 +70,44 @@ function drawSolid(ctx, st, c, r, th, trimTheme, low = false) {
     ctx.fillStyle = shadeBand(ctx, 0, y + h, 0, y + h - 12);
     ctx.fillRect(x, y + h - 12, TILE, 12);
   }
+
+  if (isConveyor && !up) {
+    const isPrevConv = c > 0 && (st.tiles[r * st.cols + c - 1] === T.CONV_R || st.tiles[r * st.cols + c - 1] === T.CONV_L);
+    const isNextConv = c + 1 < st.cols && (st.tiles[r * st.cols + c + 1] === T.CONV_R || st.tiles[r * st.cols + c + 1] === T.CONV_L);
+
+    const bg = ctx.createLinearGradient(0, y, 0, y + 18);
+    bg.addColorStop(0, '#232733');
+    bg.addColorStop(1, '#171a22');
+    ctx.fillStyle = bg;
+    roundedRect(ctx, x - (!isPrevConv ? 2 : 0), y, TILE + (!isPrevConv ? 2 : 0) + (!isNextConv ? 2 : 0), 18, [
+      !isPrevConv ? 5 : 0,
+      !isNextConv ? 5 : 0,
+      !isNextConv ? 3 : 0,
+      !isPrevConv ? 3 : 0,
+    ]);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.fillRect(x, y, TILE, 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fillRect(x, y + 16, TILE, 2);
+
+    ctx.fillStyle = th.accent ?? '#ffcf4a';
+    if (!isPrevConv) {
+      ctx.beginPath();
+      ctx.arc(x + 5, y + 8, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (!isNextConv) {
+      ctx.beginPath();
+      ctx.arc(x + TILE - 5, y + 8, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
   ctx.restore();
 
-  if (!up) drawTopTrim(ctx, x, y, c, r, !lf, !rt, trimTheme, th);
+  if (!up && !isConveyor) drawTopTrim(ctx, x, y, c, r, !lf, !rt, trimTheme, th);
 }
 
 function drawTopTrim(ctx, x, y, c, r, openL, openR, theme, th) {
@@ -217,7 +252,6 @@ export function bakeTiles(st, themeName, theme) {
     ctx.fillRect(c * TILE, st.H, TILE, GROUND_EXT);
   }
   const conveyors = [];
-  const belt = { ...theme, body: ['#5b6272', '#3b404d'], top: ['#6b7384', '#474d5c'] };
   for (let r = 0; r < st.rows; r++) {
     for (let c = 0; c < st.cols; c++) {
       const code = st.tiles[r * st.cols + c];
@@ -226,7 +260,7 @@ export function bakeTiles(st, themeName, theme) {
       if (code === T.SOLID) drawSolid(ctx, st, c, r, theme, themeName);
       else if (code === T.CONV_R || code === T.CONV_L) {
         conveyors.push({ x, y, dir: code === T.CONV_R ? 1 : -1 });
-        drawSolid(ctx, st, c, r, belt, 'belt');
+        drawSolid(ctx, st, c, r, theme, themeName, false, true);
       } else if (code === T.ONEWAY) {
         const same = (cc) => cc >= 0 && cc < st.cols && st.tiles[r * st.cols + cc] === T.ONEWAY;
         drawPlank(ctx, x, y, theme, !same(c - 1), !same(c + 1));

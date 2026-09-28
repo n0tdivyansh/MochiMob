@@ -3,6 +3,7 @@ import { COLORS, GLYPHS, CONVEYOR } from '../sim/constants.js';
 import { gateRect } from '../sim/collide.js';
 import { roundedRect } from './tiles.js';
 import { glyphPath } from './blobs.js';
+import { THEMES } from './themes.js';
 
 export function drawConveyors(ctx, conveyors, t) {
   ctx.save();
@@ -59,12 +60,13 @@ export function drawPlate(ctx, p) {
 export function drawGate(ctx, g, theme) {
   const r = gateRect(g);
   if (!r) return;
+  const th = THEMES[theme] ?? THEMES.works;
   ctx.save();
   roundedRect(ctx, r.x + 3, r.y, r.w - 6, r.h, [0, 0, 6, 6]);
   ctx.clip();
-  ctx.fillStyle = theme === 'works' ? '#6d7890' : '#8a6a58';
+  ctx.fillStyle = th.edge;
   ctx.fillRect(r.x, r.y, r.w, r.h);
-  ctx.fillStyle = '#ffcf4a';
+  ctx.fillStyle = th.accent;
   for (let y = r.y + r.h - 40; y > r.y - 40; y -= 40) {
     ctx.beginPath();
     ctx.moveTo(r.x, y);
@@ -74,7 +76,7 @@ export function drawGate(ctx, g, theme) {
     ctx.closePath();
     ctx.fill();
   }
-  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
   ctx.fillRect(r.x + 5, r.y, 5, r.h);
   ctx.restore();
 }
@@ -116,18 +118,14 @@ export function drawColorGate(ctx, g, t) {
 }
 
 export function drawLift(ctx, l, x, y, theme) {
+  const th = THEMES[theme] ?? THEMES.meadow;
   const g = ctx.createLinearGradient(0, y, 0, y + l.h);
-  if (theme === 'woods') {
-    g.addColorStop(0, '#a57b55');
-    g.addColorStop(1, '#6b4a33');
-  } else {
-    g.addColorStop(0, '#dfe6f0');
-    g.addColorStop(1, '#8e99ab');
-  }
+  g.addColorStop(0, th.body[0]);
+  g.addColorStop(1, th.body[1]);
   ctx.fillStyle = g;
   roundedRect(ctx, x, y, l.w, l.h, [10, 10, 10, 10]);
   ctx.fill();
-  ctx.fillStyle = theme === 'woods' ? '#8fd680' : '#ffcf4a';
+  ctx.fillStyle = th.top[0];
   roundedRect(ctx, x + 4, y, l.w - 8, 6, [4, 4, 0, 0]);
   ctx.fill();
   if (l.mode === 'weight' && l.need > 1) {
