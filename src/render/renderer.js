@@ -294,7 +294,7 @@ export function createRenderer(canvas) {
       ctx.fillStyle = `rgba(255,248,220,${flash})`;
       ctx.fillRect(0, 0, VW, VH);
     }
-    drawHud(session, t);
+    if (!session.hideHud) drawHud(session, t);
     ctx.restore();
   }
 
