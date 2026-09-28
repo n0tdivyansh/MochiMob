@@ -37,6 +37,7 @@ const app = {
   renderer,
   ui,
   levels: ALL_LEVELS,
+  trials: TRIALS,
   worlds: WORLDS,
   trialWorld: TRIAL_WORLD,
   mode: 'solo',
