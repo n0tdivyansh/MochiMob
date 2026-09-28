@@ -1,0 +1,26 @@
+import { liftReady, liftTop, powered } from '../summit.js';
+
+export default () => [
+  { do: 'swap', to: 1 },
+  { do: 'walk', p: 1, to: 9 },
+  { do: 'squish', p: 1, on: true },
+  { do: 'swap', to: 0 },
+  { do: 'walk', p: 0, to: 7 },
+  { do: 'walkJump', p: 0, to: 9, at: 8 },
+  { do: 'until', label: 'key', test: (s) => s.key.holder === 0 },
+  { do: 'walk', p: 0, to: 12 },
+  { do: 'swap', to: 1 },
+  { do: 'squish', p: 1, on: false },
+  { do: 'walk', p: 1, to: 16.5, hop: true, tol: 6 },
+  powered,
+  { do: 'walkJump', p: 1, to: 20, at: 17.3, tol: 20 },
+  { do: 'swap', to: 0 },
+  { do: 'walk', p: 0, to: 22.5, hop: true, tol: 20 },
+  { do: 'follow', on: true },
+  liftReady,
+  { do: 'walk', p: 0, to: 26, tol: 5 },
+  liftTop,
+  { do: 'enter', p: 0 },
+  { do: 'follow', on: false },
+  { do: 'enter', p: 1 },
+];

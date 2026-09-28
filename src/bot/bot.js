@@ -2,6 +2,7 @@
 // tests (and the title-screen attract mode) can play levels deterministically.
 import { step } from '../sim/step.js';
 import { solidsFor } from '../sim/collide.js';
+import { overlap, hOverlapLen } from '../sim/geom.js';
 import { soloCommand } from '../sim/solo.js';
 import { INPUT, TILE, FRICTION, ACCEL_AIR } from '../sim/constants.js';
 
@@ -127,8 +128,18 @@ function makeAction(st) {
           const b = ctx.blob(st.p);
           if (!b.alive) return false;
           const d = ctx.state.door;
-          const dx = d.x + d.w / 2 - cx(b);
-          if (Math.abs(dx) > 10 || !b.grounded) {
+          // Until the key-holder unlocks it, everyone else waits a step short of
+          // the door so they never pile up in the doorway.
+          const waiting = !d.open && ctx.state.key.holder !== st.p;
+          const side = cx(b) < d.x + d.w / 2 ? -1 : 1;
+          const dx = d.x + d.w / 2 + (waiting ? side * 110 : 0) - cx(b);
+          // Same rule the sim uses: at least half the blob over the doorway.
+          const atDoor = !waiting && b.grounded && overlap(b, d) && hOverlapLen(b, d) >= b.w / 2;
+          if (waiting && Math.abs(dx) < 40) {
+            ctx.press(st.p, 0);
+            return false;
+          }
+          if (!atDoor) {
             const brake = (b.vx * b.vx) / (2 * FRICTION);
             let bits = Math.abs(dx) > 6 + brake ? dirBits(dx) : 0;
             if (hopT > 0) {
@@ -137,7 +148,11 @@ function makeAction(st) {
             } else if (bits && b.grounded && !(b.prev & JUMP)) {
               const d = Math.sign(dx);
               const front = { x: d > 0 ? b.x + b.w : b.x - 3, y: b.y + 4, w: 3, h: b.h - 8 };
-              if (solidsFor(ctx.state, b, front).some((r) => !r.oneWay)) {
+              const blockers = solidsFor(ctx.state, b, front).filter((r) => !r.oneWay);
+              // Waiting blobs queue behind teammates; everyone hops walls and steps,
+              // and the key-holder also hops teammates to reach the door.
+              if (waiting && blockers.some((r) => r.body)) bits = 0;
+              else if (blockers.length) {
                 hopT = 21;
                 bits |= JUMP;
               }
