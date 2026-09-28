@@ -94,6 +94,10 @@ app.startLevel = (id) => {
   audio.play(THEME_OF_WORLD[def.world]);
   ui.hide();
   app.screen = 'playing';
+  if (app.mode === 'solo' && !save.settings.soloTipSeen) {
+    app.session.paused = true;
+    screens.soloTip();
+  }
 };
 
 app.resume = () => {

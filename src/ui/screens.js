@@ -199,6 +199,29 @@ export function createScreens(app) {
       );
     },
 
+    // One-time explainer shown before the first solo level.
+    soloTip() {
+      app.screen = 'soloTip';
+      const done = () => {
+        app.save.saveSettings({ soloTipSeen: true });
+        app.resume();
+      };
+      ui.show(
+        `<div class="card" style="max-width:640px;margin:auto">
+          <h2 style="text-align:center">You lead the whole team!</h2>
+          <p style="font-size:20px;text-align:center">Every level needs teamwork, so in solo you control <strong>all</strong> the mochi, one at a time. The arrow shows who you are moving.</p>
+          <div class="keys">
+            <span><kbd>Q</kbd> <kbd>E</kbd> / <kbd>1</kbd>-<kbd>4</kbd></span><span>Switch to another mochi</span>
+            <span><kbd>F</kbd></span><span>The others follow you</span>
+            <span><kbd>S</kbd> / <kbd>↓</kbd></span><span>Squish: a squished mochi stays squished while you switch away</span>
+          </div>
+          <p class="muted" style="text-align:center">Everyone has to reach the door to finish a level.</p>
+          <div class="row"><button class="btn primary" data-nav data-ok>Got it!</button></div>
+        </div>`,
+        { dim: true, onBack: done, bind: (el) => on(el, '[data-ok]', done) },
+      );
+    },
+
     results({ ticks, stars, newBest, nextId }) {
       app.screen = 'results';
       const def = app.session.def;

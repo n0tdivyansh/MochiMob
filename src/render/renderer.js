@@ -187,6 +187,14 @@ export function createRenderer(canvas) {
       ctx.font = '700 24px "Baloo 2", system-ui, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(s.solo.follow ? 'Follow: ON' : 'Follow: OFF', fx + 95, VH - 70);
+      ctx.font = '600 22px "Baloo 2", system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = 'rgba(40,25,55,0.55)';
+      ctx.lineWidth = 5;
+      const tip = 'Q / E  switch mochi   ·   F  follow';
+      ctx.strokeText(tip, fx + 206, VH - 70);
+      ctx.fillText(tip, fx + 206, VH - 70);
     }
     ctx.textBaseline = 'alphabetic';
   }
