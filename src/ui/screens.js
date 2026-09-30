@@ -2,6 +2,7 @@
 import { esc } from './ui.js';
 import { COLORS, COLOR_NAMES } from '../sim/constants.js';
 import { ACTIONS, ACTION_LABELS, keyLabel, rebind } from '../input/bindings.js';
+import { nextLevelId } from '../levels/index.js';
 
 const fmt = (ticks) => {
   const s = ticks / 60;
@@ -26,7 +27,7 @@ export function createScreens(app) {
         <div class="menu">
           <button class="btn primary" data-nav data-go="solo">Solo</button>
           <button class="btn" data-nav data-go="local">Local Co-op</button>
-          <button class="btn" data-nav data-go="online">Online</button>
+          <button class="btn" data-nav data-go="online">Online <span style="font-size:16px;opacity:0.8;font-weight:600">(Coming Soon)</span></button>
           <button class="btn" data-nav data-go="settings">Settings</button>
           <button class="btn" data-nav data-go="credits">Credits</button>
         </div>
@@ -178,6 +179,7 @@ export function createScreens(app) {
     pause() {
       app.screen = 'pause';
       const hint = app.session?.def.hint;
+      const nextId = app.session ? nextLevelId(app.session.def.id) : null;
       ui.show(
         `<div class="card" style="max-width:520px;margin:auto">
           <h2 style="text-align:center">Paused</h2>
@@ -185,6 +187,7 @@ export function createScreens(app) {
           <div class="menu">
             <button class="btn primary" data-nav data-a="resume">Resume</button>
             <button class="btn" data-nav data-a="restart">Restart level</button>
+            ${nextId ? `<button class="btn reward" data-nav data-a="skip-reward">🎁 Skip Level (Ad)</button>` : ''}
             <button class="btn" data-nav data-a="settings">Settings</button>
             <button class="btn" data-nav data-a="quit">Quit to map</button>
           </div>
@@ -197,7 +200,19 @@ export function createScreens(app) {
               const a = b.dataset.a;
               if (a === 'resume') app.resume();
               else if (a === 'restart') app.restart();
-              else if (a === 'settings') screens.settings(() => screens.pause(), true);
+              else if (a === 'skip-reward') {
+                app.crazygames.requestRewardedAd({
+                  onRewarded: () => {
+                    const s = app.session;
+                    if (s) {
+                      app.save.recordClear(mode(), s.def.id, Math.floor(s.def.par * 60));
+                      app.audio.sfx('unlock');
+                      if (nextId) app.startLevel(nextId);
+                      else app.quitToMap();
+                    }
+                  },
+                });
+              } else if (a === 'settings') screens.settings(() => screens.pause(), true);
               else app.quitToMap();
             }),
         },
@@ -229,15 +244,16 @@ export function createScreens(app) {
 
     results({ ticks, stars, newBest, nextId }) {
       app.screen = 'results';
-      const def = app.session.def;
+      const def = app.session?.def;
       ui.show(
         `<div class="card" style="max-width:560px;margin:auto">
           <h2 style="text-align:center">Level clear!</h2>
           <div class="stars-big">${starRow(stars)}</div>
           <p class="stat">${fmt(ticks)}${newBest ? ' · <span style="color:#e0487a">New best!</span>' : ''}</p>
-          <p class="muted" style="text-align:center">★★ under ${def.par}s · ★★★ under ${def.gold}s</p>
+          <p class="muted" style="text-align:center">★★ under ${def ? def.par : 30}s · ★★★ under ${def ? def.gold : 15}s</p>
           <div class="menu">
             ${nextId ? '<button class="btn primary" data-nav data-a="next">Next level</button>' : ''}
+            ${stars < 3 ? '<button class="btn reward" data-nav data-a="gold-reward">★ Claim 3-Star Gold (Ad)</button>' : ''}
             <button class="btn" data-nav data-a="retry">Retry</button>
             <button class="btn" data-nav data-a="map">Level map</button>
           </div>
@@ -248,9 +264,28 @@ export function createScreens(app) {
           bind: (el) =>
             on(el, '[data-a]', (b) => {
               const a = b.dataset.a;
-              if (a === 'next') app.startLevel(nextId);
-              else if (a === 'retry') app.restart();
-              else app.quitToMap();
+              if (a === 'gold-reward') {
+                app.crazygames.requestRewardedAd({
+                  onRewarded: () => {
+                    if (def) {
+                      app.save.recordClear(mode(), def.id, Math.floor(def.gold * 60 * 0.9));
+                      app.audio.sfx('clear');
+                      app.crazygames.happytime();
+                      screens.results({ ticks, stars: 3, newBest: true, nextId });
+                    }
+                  },
+                });
+              } else if (a === 'next') {
+                app.crazygames.requestMidgameAd({
+                  onComplete: () => app.startLevel(nextId),
+                });
+              } else if (a === 'retry') {
+                app.crazygames.requestMidgameAd({
+                  onComplete: () => app.restart(),
+                });
+              } else {
+                app.quitToMap();
+              }
             }),
         },
       );
@@ -338,23 +373,17 @@ export function createScreens(app) {
       );
     },
 
-    // Phase D replaces this with the full lobby; until then it reports availability.
     online() {
       app.screen = 'online';
       ui.show(
-        `<div class="card" style="max-width:600px;margin:auto">
-          <h2>Online</h2>
-          <p data-status>Checking the game server…</p>
-          <div class="row"><button class="btn primary small" data-nav data-back>Back</button></div>
+        `<div class="card" style="max-width:620px;margin:auto">
+          <h2>Online Multiplayer</h2>
+          <p style="font-size:22px;text-align:center;margin:16px 0">🌐 <strong>Planned for a future update!</strong></p>
+          <p class="muted" style="text-align:center;font-size:18px;line-height:1.5">Dedicated online room matchmaking is in active development.<br><br>In the meantime, you can experience all 24 levels in <strong>Solo Mode</strong> (controlling your team with Q/E) or team up in <strong>Local Co-op</strong> on the same keyboard or controllers!</p>
+          <div class="row" style="margin-top:24px"><button class="btn primary small" data-nav data-back>Back to Menu</button></div>
         </div>`,
         { onBack: () => screens.title(), bind: (el) => on(el, '[data-back]', () => screens.title()) },
       );
-      app.probeServer().then((ok) => {
-        const el = document.querySelector('[data-status]');
-        if (!el || app.screen !== 'online') return;
-        if (ok && app.openLobby) app.openLobby();
-        else el.textContent = 'Online unavailable: no game server is running. Solo and Local Co-op work offline.';
-      });
     },
   };
   return screens;

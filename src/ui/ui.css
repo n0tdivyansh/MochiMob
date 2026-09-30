@@ -98,6 +98,7 @@
 }
 
 .btn.primary { background: var(--pink); color: #fff; box-shadow: 0 5px 0 #d94f7d, 0 8px 18px rgba(43, 29, 51, 0.25); }
+.btn.reward { background: linear-gradient(135deg, #ffd24d 0%, #ff9f1c 100%); color: #2b1d33; box-shadow: 0 5px 0 #d47e00, 0 8px 18px rgba(255, 159, 28, 0.35); }
 .btn.small { min-width: 0; font-size: 20px; padding: 8px 20px; }
 .btn:disabled { opacity: 0.45; cursor: default; }
 .btn:hover:not(:disabled), .btn.is-focus { transform: translateY(-2px) scale(1.03); }

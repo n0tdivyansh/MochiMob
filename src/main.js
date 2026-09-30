@@ -12,6 +12,7 @@ import { createScreens } from './ui/screens.js';
 import { DEFAULT_BINDINGS } from './input/bindings.js';
 import { createWorld } from './sim/world.js';
 import { step } from './sim/step.js';
+import { crazygames } from './core/crazygames.js';
 
 let storage = null;
 try {
@@ -26,6 +27,8 @@ const canvas = document.getElementById('game');
 const renderer = createRenderer(canvas);
 const input = createInput(window);
 const audio = createAudio();
+crazygames.init(audio);
+crazygames.loadingStart();
 const ui = createUI(document.getElementById('ui'), { sfx: (n) => audio.sfx(n) });
 
 const CLEAR_DELAY = 100; // ticks of celebration before the results card
@@ -34,6 +37,7 @@ const app = {
   save,
   input,
   audio,
+  crazygames,
   renderer,
   ui,
   levels: ALL_LEVELS,
@@ -97,6 +101,7 @@ app.startLevel = (id) => {
   audio.play(def.theme ?? THEME_OF_WORLD[def.world]);
   ui.hide();
   app.screen = 'playing';
+  crazygames.gameplayStart();
   if (app.mode === 'solo' && app.n > 1 && !save.settings.soloTipSeen) {
     app.session.paused = true;
     screens.soloTip();
@@ -108,6 +113,7 @@ app.resume = () => {
   app.session.paused = false;
   ui.hide();
   app.screen = 'playing';
+  crazygames.gameplayStart();
 };
 
 app.restart = () => {
@@ -119,22 +125,28 @@ app.restart = () => {
 };
 
 app.quitToMap = () => {
+  crazygames.gameplayStop();
   app.session = null;
   resetDemo();
   screens.map();
 };
 
 function pause() {
+  crazygames.gameplayStop();
   app.session.paused = true;
   audio.sfx('back');
   screens.pause();
 }
 
 function finishLevel() {
+  crazygames.gameplayStop();
   const s = app.session;
   const mode = app.mode === 'solo' ? 'solo' : 'coop';
   const result = save.recordClear(mode, s.def.id, s.ticks);
   const nextId = nextLevelId(s.def.id);
+  if (result.stars === 3) {
+    crazygames.happytime();
+  }
   screens.results({ ticks: s.ticks, stars: result.stars, newBest: result.newBest, nextId: nextId && save.isUnlocked(nextId) ? nextId : null });
 }
 
@@ -289,6 +301,7 @@ if (deep && getLevel(deep)) {
 } else {
   screens.title();
 }
+crazygames.loadingStop();
 
 loop.start();
 window.__mochi = { app, loop, renderer, audio };

@@ -10,6 +10,7 @@ export function createAudio() {
   let sfxBus;
   let noise;
   let vol = { master: 0.8, music: 0.6, sfx: 0.8 };
+  let systemMuted = false;
   let song = null;
   let songName = null;
   let step = 0;
@@ -18,9 +19,19 @@ export function createAudio() {
 
   function applyVolumes() {
     if (!ac) return;
-    master.gain.value = vol.master;
-    musicBus.gain.value = vol.music * 0.5;
-    sfxBus.gain.value = vol.sfx;
+    master.gain.value = systemMuted ? 0 : vol.master;
+    musicBus.gain.value = systemMuted ? 0 : vol.music * 0.5;
+    sfxBus.gain.value = systemMuted ? 0 : vol.sfx;
+  }
+
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (ac && ac.state === 'running') ac.suspend?.();
+      } else {
+        if (ac && ac.state === 'suspended' && !systemMuted) ac.resume?.();
+      }
+    });
   }
 
   // Create the context on the first user gesture (browsers block autoplay).
@@ -197,6 +208,10 @@ export function createAudio() {
     stop,
     setVolumes(v) {
       vol = { ...vol, ...v };
+      applyVolumes();
+    },
+    setSystemMuted(muted) {
+      systemMuted = !!muted;
       applyVolumes();
     },
   };

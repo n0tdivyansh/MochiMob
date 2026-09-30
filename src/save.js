@@ -36,10 +36,18 @@ export function createSave(storage, levels) {
   const settings = { ...DEFAULT_SETTINGS, ...data.settings };
 
   const write = () => {
+    const serialized = JSON.stringify({ ...data, settings });
     try {
-      storage.setItem(KEY, JSON.stringify({ ...data, settings }));
+      storage?.setItem(KEY, serialized);
     } catch {
       // storage unavailable: progress lives for this session only
+    }
+    try {
+      if (typeof window !== 'undefined' && window.CrazyGames?.SDK?.data?.setItem) {
+        window.CrazyGames.SDK.data.setItem(KEY, serialized);
+      }
+    } catch {
+      // SDK data module unavailable
     }
   };
   const cleared = (id) => !!(data.progress.solo[id] || data.progress.coop[id]);
