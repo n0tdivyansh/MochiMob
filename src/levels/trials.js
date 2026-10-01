@@ -17,7 +17,16 @@ function hopAlong() {
   g.set(27, 7, 'K');
   g.spawns(1, 9);
   g.set(37, 9, 'D');
-  return trial('t-1', 'Hop Along', 'meadow', 'Hold jump for a higher hop.', 40, 15, g);
+  return {
+    ...trial('t-1', 'Hop Along', 'meadow', 'Hold jump for a higher hop.', 40, 15, g),
+    // In-world key prompts (tile coords: x = centre, y = bottom of the sign).
+    prompts: [
+      { x: 3, y: 7.5, keys: ['A', 'D'], text: 'Move' },
+      { x: 9, y: 6.5, keys: ['W'], text: 'Jump' },
+      { x: 16, y: 7.5, keys: ['W'], text: 'Hold to jump higher' },
+      { x: 35, y: 7.5, keys: ['W'], text: 'Enter the door' },
+    ],
+  };
 }
 
 // t-2 Spring Garden: bounce pads carry you up two tiers.

@@ -190,3 +190,60 @@ describe('team of one', () => {
     expect(s.blobs[0].x).toBeGreaterThan(70);
   });
 });
+
+describe('solo follow riding the leader', () => {
+  // Floor with a 3-wide pit at cols 9-11 (x 576-768); key and door past it.
+  const PIT = [
+    '####################',
+    '#..................#',
+    '#..................#',
+    '#..................#',
+    '#SSSS........K..D..#',
+    '#########...########',
+  ];
+
+  it('a follower standing on the leader rides along instead of walking off into a pit', () => {
+    const s = solo(PIT);
+    settle(s);
+    soloCommand(s, 'follow');
+    const [lead, rider] = s.blobs;
+    rider.x = lead.x;
+    rider.y = lead.y - rider.h - 2;
+    rider.vx = 0;
+    rider.vy = 0;
+    run(s, 20, () => 0);
+    expect(rider.y + rider.h).toBeCloseTo(lead.y, 0); // stacked on the leader
+    // Leader walks right toward the pit; the rider must stay on its head.
+    run(s, 200, () => (lead.x + lead.w < 576 - 20 ? RIGHT : 0));
+    run(s, 60, () => 0);
+    expect(lead.alive).toBe(true);
+    expect(rider.alive).toBe(true);
+    expect(rider.y + rider.h).toBeCloseTo(lead.y, 0);
+    expect(Math.abs(rider.x - lead.x)).toBeLessThan(lead.w);
+  });
+});
+
+describe('solo follow near spikes', () => {
+  // Spikes at cols 9-10; the leader stands beyond them.
+  const SPIKY = [
+    '####################',
+    '#..................#',
+    '#..................#',
+    '#..................#',
+    '#SSSS....^^..K..D..#',
+    '####################',
+  ];
+
+  it('a running follower stops before spikes instead of sliding into them', () => {
+    const s = solo(SPIKY);
+    settle(s);
+    const [lead, fol] = s.blobs;
+    lead.x = 14 * 64; // past the spikes
+    run(s, 10, () => 0);
+    soloCommand(s, 'follow');
+    const events = runEvents(s, 180, () => 0);
+    expect(events.filter((e) => e.type === 'die')).toEqual([]);
+    expect(fol.x + fol.w).toBeLessThanOrEqual(9 * 64 + 8);
+  });
+});
+

@@ -40,14 +40,14 @@
 .card {
   background: var(--card);
   border-radius: 28px;
-  padding: clamp(18px, 3vw, 36px);
+  padding: clamp(14px, min(3vw, 4.5vh), 36px);
   box-shadow: var(--shadow);
 }
 
 .logo {
   text-align: center;
   font-weight: 800;
-  font-size: clamp(56px, 10vw, 128px);
+  font-size: clamp(44px, min(10vw, 17vh), 128px);
   line-height: 0.9;
   letter-spacing: -2px;
   margin: 0 0 8px;
@@ -69,25 +69,25 @@
 .tagline {
   text-align: center;
   color: #fff;
-  font-size: clamp(18px, 2.4vw, 26px);
+  font-size: clamp(16px, min(2.4vw, 4.2vh), 26px);
   font-weight: 600;
-  margin: 0 0 28px;
+  margin: 0 0 clamp(10px, 4vh, 28px);
   text-shadow: 0 2px 8px rgba(43, 29, 51, 0.45);
 }
 
 .menu {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: clamp(6px, 1.8vh, 12px);
   align-items: center;
 }
 
 .btn {
   font: inherit;
   font-weight: 700;
-  font-size: clamp(20px, 2.4vw, 28px);
+  font-size: clamp(17px, min(2.4vw, 4.6vh), 28px);
   min-width: min(360px, 80vw);
-  padding: 10px 28px;
+  padding: clamp(4px, 1.4vh, 10px) 28px;
   border: none;
   border-radius: 999px;
   background: var(--paper);
@@ -99,7 +99,7 @@
 
 .btn.primary { background: var(--pink); color: #fff; box-shadow: 0 5px 0 #d94f7d, 0 8px 18px rgba(43, 29, 51, 0.25); }
 .btn.reward { background: linear-gradient(135deg, #ffd24d 0%, #ff9f1c 100%); color: #2b1d33; box-shadow: 0 5px 0 #d47e00, 0 8px 18px rgba(255, 159, 28, 0.35); }
-.btn.small { min-width: 0; font-size: 20px; padding: 8px 20px; }
+.btn.small { min-width: 0; font-size: clamp(16px, 3.8vh, 20px); padding: clamp(4px, 1.2vh, 8px) 20px; }
 .btn:disabled { opacity: 0.45; cursor: default; }
 .btn:hover:not(:disabled), .btn.is-focus { transform: translateY(-2px) scale(1.03); }
 .btn:active:not(:disabled) { transform: translateY(2px); }
@@ -110,8 +110,8 @@
 }
 
 h2 {
-  margin: 0 0 16px;
-  font-size: clamp(30px, 4vw, 44px);
+  margin: 0 0 clamp(6px, 2vh, 16px);
+  font-size: clamp(24px, min(4vw, 7vh), 44px);
   font-weight: 800;
 }
 
@@ -123,9 +123,9 @@ h2 {
 .choice {
   font: inherit;
   font-weight: 800;
-  font-size: 30px;
-  width: 84px;
-  height: 84px;
+  font-size: clamp(20px, 5vh, 30px);
+  width: min(84px, 13vh);
+  height: min(84px, 13vh);
   border-radius: 24px;
   border: none;
   background: #f2e8ff;
@@ -137,9 +137,9 @@ h2 {
 .keys {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 6px 18px;
-  font-size: 20px;
-  margin: 18px auto;
+  gap: clamp(2px, 1vh, 6px) 18px;
+  font-size: clamp(14px, 3.6vh, 20px);
+  margin: clamp(6px, 2.4vh, 18px) auto;
   max-width: 560px;
 }
 kbd {
@@ -164,7 +164,7 @@ kbd {
 .slot {
   border-radius: 22px;
   padding: 16px;
-  min-height: 170px;
+  min-height: clamp(110px, 28vh, 170px);
   background: #f4ecf8;
   display: grid;
   place-items: center;
@@ -203,7 +203,7 @@ kbd {
   font: inherit;
   border: none;
   border-radius: 22px;
-  padding: 14px 10px;
+  padding: clamp(6px, 2vh, 14px) 10px;
   background: #fff;
   color: var(--ink);
   box-shadow: 0 5px 0 #e3d5c6;
@@ -218,9 +218,9 @@ kbd {
 .level .best { font-size: 14px; color: var(--ink-soft); }
 .level.locked { background: #eee6f2; color: #a898b3; cursor: default; box-shadow: none; }
 
-.stars-big { font-size: 64px; color: #ffc93a; letter-spacing: 8px; text-align: center; }
+.stars-big { font-size: clamp(36px, 10vh, 64px); color: #ffc93a; letter-spacing: 8px; text-align: center; }
 .stars .off, .stars-big .off { color: #e6dbe9; }
-.stat { font-size: 26px; text-align: center; font-weight: 700; }
+.stat { font-size: clamp(18px, 4.5vh, 26px); text-align: center; font-weight: 700; margin: clamp(2px, 1vh, 10px) 0; }
 
 .setting { display: grid; grid-template-columns: 200px 1fr 60px; align-items: center; gap: 14px; margin: 10px 0; font-weight: 700; font-size: 20px; }
 @media (max-width: 720px) { .setting { grid-template-columns: 1fr; } }
@@ -251,6 +251,19 @@ input[type='range'] { width: 100%; accent-color: var(--pink); height: 28px; }
   pointer-events: none;
 }
 #toast.show { opacity: 1; }
+
+.rebind summary { cursor: pointer; font-weight: 700; font-size: 20px; margin: 8px 0; }
+
+/* Short iframes (CrazyGames 800x450, 821x462): fold tall layouts so no screen scrolls. */
+@media (max-height: 560px) {
+  .keys { grid-template-columns: auto 1fr auto 1fr; max-width: none; }
+  .keys kbd { min-width: 20px; padding: 0 6px; }
+  .slot { min-height: 0; padding: 10px; }
+  .slots { margin: 6px 0 10px; }
+  .card p { margin: 6px 0; }
+  .setting { margin: 4px 0; }
+  .toggle { margin: 4px 0; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .logo span, #ui > .screen { animation: none; }

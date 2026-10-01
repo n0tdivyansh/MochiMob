@@ -23,4 +23,7 @@ export default {
     { type: 'paint', x: 26, y: 11, color: 1 },
     { type: 'cgate', x: 30, y: 1, h: 11, color: 1 },
   ],
+  prompts: [
+    { x: 6, y: 9.5, keys: [], text: 'Walk through paint to change colour' },
+  ],
 };

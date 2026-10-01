@@ -129,12 +129,15 @@ export function updateKey(state) {
     const ty = h.y - 44 + h.h / 2;
     key.x += (tx - key.x) * KEY_LERP;
     key.y += (ty - key.y) * KEY_LERP;
-    if (!state.door.open && overlap(h, state.door)) {
+    // Any teammate at the door opens it once someone carries the key: the
+    // holder still has to walk in later, so no puzzle is skipped.
+    const opener = state.door.open ? null : state.blobs.find((b) => b.alive && !b.inDoor && overlap(b, state.door));
+    if (opener) {
       state.door.open = true;
       key.holder = -2;
       key.x = state.door.x + state.door.w / 2;
       key.y = state.door.y + state.door.h / 2;
-      state.events.push({ type: 'unlock', i: h.i, x: key.x, y: key.y });
+      state.events.push({ type: 'unlock', i: opener.i, x: key.x, y: key.y });
     }
   }
 }

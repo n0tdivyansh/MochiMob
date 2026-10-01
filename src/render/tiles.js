@@ -231,6 +231,78 @@ function drawPad(ctx, x, y) {
   }
 }
 
+// Background props on flat open ground (bushes, mushrooms, gears, crystals).
+// Low and soft so they never read as obstacles; blobs draw on top of them.
+function drawProp(ctx, x, y, c, r, theme, th) {
+  const cx = x + TILE / 2 + (hash(c, r, 201) - 0.5) * 24;
+  const big = hash(c, r, 202) > 0.5;
+  ctx.save();
+  if (theme === 'meadow' || theme === 'woods') {
+    if (big) {
+      // bush: three overlapping puffs with a light rim
+      const s = 12 + hash(c, r, 203) * 5;
+      ctx.fillStyle = th.top[1];
+      for (const [dx, dy, k] of [[-s, -s * 0.7, 0.9], [s, -s * 0.7, 0.9], [0, -s * 1.2, 1.15]]) {
+        ctx.beginPath();
+        ctx.arc(cx + dx, y + dy, s * k, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(255,255,255,0.22)';
+      ctx.beginPath();
+      ctx.arc(cx - s * 0.3, y - s * 1.6, s * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // mushroom pair
+      for (const [dx, k] of [[-7, 1], [8, 0.7]]) {
+        const mx = cx + dx;
+        ctx.fillStyle = '#fff3e2';
+        roundedRect(ctx, mx - 3 * k, y - 14 * k, 6 * k, 14 * k, [2, 2, 0, 0]);
+        ctx.fill();
+        ctx.fillStyle = theme === 'meadow' ? th.accent : '#e8735a';
+        ctx.beginPath();
+        ctx.ellipse(mx, y - 14 * k, 10 * k, 7 * k, 0, Math.PI, 0);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        ctx.beginPath();
+        ctx.arc(mx - 3 * k, y - 17 * k, 1.8 * k, 0, Math.PI * 2);
+        ctx.arc(mx + 4 * k, y - 16 * k, 1.4 * k, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  } else if (theme === 'works') {
+    // vent pipe with a bent cap (gears read as saw blades, so no gears)
+    const h = big ? 30 : 20;
+    ctx.fillStyle = th.body[1];
+    roundedRect(ctx, cx - 6, y - h, 12, h, [3, 3, 0, 0]);
+    ctx.fill();
+    ctx.fillStyle = th.body[0];
+    roundedRect(ctx, cx - 9, y - h - 6, 22, 9, [4, 4, 4, 4]);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillRect(cx - 4, y - h + 2, 3, h - 4);
+  } else if (theme === 'peaks') {
+    // crystal cluster
+    const cols = ['#bfe9ff', '#ffd1ec', '#e3d6ff'];
+    for (const [dx, h, w] of [[-9, 18, 6], [0, 30, 8], [10, 22, 6]]) {
+      const hh = h * (big ? 1.2 : 0.8);
+      ctx.fillStyle = cols[Math.floor(hash(c, r, 205 + dx) * 3)];
+      ctx.beginPath();
+      ctx.moveTo(cx + dx - w, y);
+      ctx.lineTo(cx + dx, y - hh);
+      ctx.lineTo(cx + dx + w, y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.beginPath();
+      ctx.moveTo(cx + dx - 1, y - 2);
+      ctx.lineTo(cx + dx, y - hh + 4);
+      ctx.lineTo(cx + dx + 2, y - 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
 function makeCanvas(w, h) {
   if (typeof OffscreenCanvas !== 'undefined') return new OffscreenCanvas(w, h);
   return Object.assign(document.createElement('canvas'), { width: w, height: h });
@@ -267,6 +339,15 @@ export function bakeTiles(st, themeName, theme) {
       } else if (code === T.SPIKES) drawSpikes(ctx, x, y, themeName);
       else if (code === T.LOW) drawSolid(ctx, st, c, r, theme, themeName, true);
       else if (code === T.PAD) drawPad(ctx, x, y);
+    }
+  }
+  // Props only on the middle of flat, open runs, with two empty tiles of headroom.
+  const at = (c, r) => (c < 0 || c >= st.cols || r < 0 || r >= st.rows ? -1 : st.tiles[r * st.cols + c]);
+  const flatTop = (c, r) => at(c, r) === T.SOLID && at(c, r - 1) === T.EMPTY;
+  for (let r = 2; r < st.rows; r++) {
+    for (let c = 1; c < st.cols - 1; c++) {
+      if (!flatTop(c - 1, r) || !flatTop(c, r) || !flatTop(c + 1, r) || at(c, r - 2) !== T.EMPTY) continue;
+      if (hash(c, r, 200) > 0.8) drawProp(ctx, c * TILE, r * TILE, c, r, themeName, theme);
     }
   }
   return { canvas, conveyors };

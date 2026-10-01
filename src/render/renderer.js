@@ -1,7 +1,7 @@
 // Draws a session: backdrop, baked tiles, objects, blobs, particles, HUD.
 // Everything is drawn in a virtual 1920x1080 space, letterboxed to the window.
 import { cameraTarget } from '../sim/camera.js';
-import { COLORS } from '../sim/constants.js';
+import { COLORS, TILE } from '../sim/constants.js';
 import { THEMES, THEME_OF_WORLD } from './themes.js';
 import { bakeTiles, roundedRect } from './tiles.js';
 import { drawBackdrop } from './backdrops.js';
@@ -15,6 +15,8 @@ const VW = 1920;
 const VH = 1080;
 
 const lerp = (a, b, t) => a + (b - a) * t;
+// On-screen pause button (virtual 1920x1080 coords), left of the key pill.
+const PAUSE_RECT = { x: VW - 206, y: 24, w: 82, h: 56 };
 
 export function createRenderer(canvas) {
   const ctx = canvas.getContext('2d');
@@ -141,6 +143,14 @@ export function createRenderer(canvas) {
     ctx.textAlign = 'right';
     ctx.fillText(time, 28 + w1 - 22, 53);
 
+    const P = PAUSE_RECT;
+    pill(P.x, P.y, P.w, P.h, 'rgba(40,25,55,0.55)');
+    ctx.fillStyle = '#ffffff';
+    for (const dx of [-9, 5]) {
+      roundedRect(ctx, P.x + P.w / 2 + dx, P.y + 16, 8, 24, [3, 3, 3, 3]);
+      ctx.fill();
+    }
+
     pill(VW - 110, 24, 82, 56, 'rgba(40,25,55,0.55)');
     ctx.save();
     ctx.globalAlpha = s.key.holder === -1 ? 0.35 : 1;
@@ -209,6 +219,39 @@ export function createRenderer(canvas) {
     ctx.textBaseline = 'alphabetic';
   }
 
+  // In-world tutorial sign: keycaps + a short label, anchored in tile coords.
+  function drawPrompt(p, t) {
+    const KEY = 46;
+    const GAP = 8;
+    ctx.font = '700 26px "Baloo 2", system-ui, sans-serif';
+    const textW = ctx.measureText(p.text).width;
+    const keysW = p.keys.length * (KEY + GAP);
+    const w = keysW + textW + 36;
+    const h = KEY + 20;
+    const x = p.x * TILE - w / 2;
+    const y = p.y * TILE - h + Math.sin(t * 2 + p.x) * 3;
+    ctx.fillStyle = 'rgba(40,25,55,0.72)';
+    roundedRect(ctx, x, y, w, h, [18, 18, 18, 18]);
+    ctx.fill();
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+    p.keys.forEach((k, i) => {
+      const kx = x + 18 + i * (KEY + GAP);
+      ctx.fillStyle = '#d8c9b8';
+      roundedRect(ctx, kx, y + 13, KEY, KEY, [10, 10, 10, 10]);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      roundedRect(ctx, kx, y + 10, KEY, KEY - 4, [10, 10, 10, 10]);
+      ctx.fill();
+      ctx.fillStyle = '#2b1d33';
+      ctx.fillText(k, kx + KEY / 2, y + 10 + (KEY - 4) / 2 + 1);
+    });
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'left';
+    ctx.fillText(p.text, x + 18 + keysW, y + h / 2 + 1);
+    ctx.textBaseline = 'alphabetic';
+  }
+
   function drawEmote(bx, by, em, color) {
     ctx.fillStyle = '#ffffff';
     roundedRect(ctx, bx - 26, by - 26, 52, 40, [16, 16, 16, 16]);
@@ -269,6 +312,7 @@ export function createRenderer(canvas) {
     drawConveyors(ctx, level.conveyors, t);
     for (const p of s.paints) drawPaint(ctx, p, t);
     for (const cp of s.checkpoints) drawCheckpoint(ctx, cp, t);
+    if (!session.hideHud) for (const p of level.def.prompts ?? []) drawPrompt(p, reduced ? 0 : t);
     drawDoor(ctx, s.door, s.blobs, t);
     for (const p of s.plates) drawPlate(ctx, p);
     for (const g of s.gates) drawGate(ctx, g, level.themeName);
@@ -318,5 +362,13 @@ export function createRenderer(canvas) {
 
   resize();
   window.addEventListener('resize', resize);
-  return { setLevel, setSettings, onEvents, draw, resize };
+  // Window client coords -> virtual 1920x1080 coords (for HUD hit tests).
+  const toVirtual = (cx, cy) => ({ x: (cx - view.ox) / view.scale, y: (cy - view.oy) / view.scale });
+  const hitPause = (cx, cy) => {
+    const v = toVirtual(cx, cy);
+    const P = PAUSE_RECT;
+    return v.x >= P.x && v.x <= P.x + P.w && v.y >= P.y && v.y <= P.y + P.h;
+  };
+
+  return { setLevel, setSettings, onEvents, draw, resize, hitPause };
 }

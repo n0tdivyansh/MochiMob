@@ -27,8 +27,12 @@ const canvas = document.getElementById('game');
 const renderer = createRenderer(canvas);
 const input = createInput(window);
 const audio = createAudio();
-crazygames.init(audio);
-crazygames.loadingStart();
+// SDK init is async: lifecycle calls made before it resolves are dropped, so
+// report loading done and re-announce gameplay once it is ready.
+crazygames.init(audio).then(() => {
+  crazygames.loadingStop();
+  if (app.screen === 'playing' && !app.session?.paused) crazygames.gameplayStart();
+});
 const ui = createUI(document.getElementById('ui'), { sfx: (n) => audio.sfx(n) });
 
 const CLEAR_DELAY = 100; // ticks of celebration before the results card
@@ -56,6 +60,9 @@ const app = {
 const screens = createScreens(app);
 
 const soloDevices = () => [{ kind: 'kb', slot: 0 }, { kind: 'kb', slot: 1 }, ...input.padIndices().map((index) => ({ kind: 'pad', index }))];
+
+// Next level after `id`: the first one-mochi level hands over to the team levels.
+app.nextAfter = (id) => (id === 't-1' && !save.isCleared('w1-1') ? 'w1-1' : nextLevelId(id));
 
 app.setMode = (mode, n, devices = []) => {
   app.mode = mode;
@@ -92,6 +99,8 @@ function stepDemo() {
 app.startLevel = (id) => {
   const def = getLevel(id);
   if (!def) return;
+  // Solo team size follows the level: trials take one mochi, team levels 2+.
+  if (app.mode === 'solo') app.n = def.trial ? 1 : Math.max(2, app.n);
   const devices = app.mode === 'solo' ? soloDevices() : app.devices;
   app.session = createSession({ def, n: app.n, mode: app.mode, devices });
   app.lastLevel = id;
@@ -102,10 +111,7 @@ app.startLevel = (id) => {
   ui.hide();
   app.screen = 'playing';
   crazygames.gameplayStart();
-  if (app.mode === 'solo' && app.n > 1 && !save.settings.soloTipSeen) {
-    app.session.paused = true;
-    screens.soloTip();
-  }
+  if (app.mode === 'solo') save.saveSettings({ lastPlay: { id, n: app.n } });
 };
 
 app.resume = () => {
@@ -143,7 +149,7 @@ function finishLevel() {
   const s = app.session;
   const mode = app.mode === 'solo' ? 'solo' : 'coop';
   const result = save.recordClear(mode, s.def.id, s.ticks);
-  const nextId = nextLevelId(s.def.id);
+  const nextId = app.nextAfter(s.def.id);
   if (result.stars === 3) {
     crazygames.happytime();
   }
@@ -177,32 +183,6 @@ window.addEventListener(
   },
   true,
 );
-
-// Online probe: full online play arrives with the server (Phase D).
-app.serverUrl = () => import.meta.env.VITE_SERVER_URL || `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`;
-app.probeServer = () =>
-  new Promise((resolve) => {
-    let done = false;
-    let ws = null;
-    const finish = (ok) => {
-      if (done) return;
-      done = true;
-      try {
-        ws?.close();
-      } catch {
-        // already closed
-      }
-      resolve(ok);
-    };
-    try {
-      ws = new WebSocket(app.serverUrl());
-      ws.onopen = () => finish(true);
-      ws.onerror = () => finish(false);
-      setTimeout(() => finish(false), 3000);
-    } catch {
-      finish(false);
-    }
-  });
 
 // Local co-op joining: Jump joins a keyboard slot or gamepad, Squish leaves.
 function handleJoin(pressed) {
@@ -284,6 +264,14 @@ const loop = createLoop({
 });
 
 window.addEventListener('pointerdown', () => audio.init());
+// Clicking outside the game iframe drops keyboard focus: pause instead of
+// leaving the level (and its timer) running with no input.
+window.addEventListener('blur', () => {
+  if (app.screen === 'playing' && app.session && !app.session.paused && !app.session.cleared) pause();
+});
+canvas.addEventListener('pointerdown', (e) => {
+  if (app.screen === 'playing' && app.session && !app.session.paused && renderer.hitPause(e.clientX, e.clientY)) pause();
+});
 window.addEventListener('error', (e) => ui.toast(`Oops: ${e.message}`));
 window.addEventListener('unhandledrejection', (e) => ui.toast(`Oops: ${e.reason?.message ?? e.reason}`));
 
@@ -298,10 +286,13 @@ if (deep && getLevel(deep)) {
   const mode = params.get('mode') === 'local' ? 'local' : 'solo';
   app.setMode(mode, n, Array.from({ length: n }, (_, slot) => ({ kind: 'kb', slot })));
   app.startLevel(deep);
+} else if (!save.settings.lastPlay && !save.isCleared('t-1') && !save.isCleared('w1-1')) {
+  // First visit: land straight in gameplay with one mochi.
+  app.setMode('solo', 1);
+  app.startLevel('t-1');
 } else {
   screens.title();
 }
-crazygames.loadingStop();
 
 loop.start();
 window.__mochi = { app, loop, renderer, audio };

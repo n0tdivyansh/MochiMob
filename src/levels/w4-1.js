@@ -31,4 +31,7 @@ export default {
     plate(3, 4),
     { type: 'gate', id: 'shutter', x: 32, y: 1, h: 11, link: ['p1', 'p2', 'p3'], mode: 'all' },
   ],
+  prompts: [
+    { x: 5, y: 9.5, keys: [], text: 'Your colour drops through its glass' },
+  ],
 };

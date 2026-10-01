@@ -19,4 +19,7 @@ export default {
   gold: 25,
   map: g.rows(),
   entities: [{ type: 'crate', id: 'pudding', x: 11, y: 9, weight: 'players' }],
+  prompts: [
+    { x: 5, y: 7.5, keys: ['F'], text: 'Follow on, then push together' },
+  ],
 };

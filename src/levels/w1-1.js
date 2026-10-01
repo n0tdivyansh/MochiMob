@@ -19,4 +19,9 @@ export default {
   gold: 20,
   map: g.rows(),
   entities: [],
+  prompts: [
+    { x: 4, y: 7.5, keys: ['Q', 'E'], text: 'Switch mochi' },
+    { x: 10, y: 7.5, keys: ['F'], text: 'Team follows you' },
+    { x: 24.5, y: 7.5, keys: [], text: 'Stand on a friend to reach the key' },
+  ],
 };

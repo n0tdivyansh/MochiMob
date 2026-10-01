@@ -22,4 +22,7 @@ export default {
   tetherLen: 8,
   map: g.rows(),
   entities: [],
+  prompts: [
+    { x: 6, y: 7.5, keys: [], text: 'The rope keeps you together' },
+  ],
 };

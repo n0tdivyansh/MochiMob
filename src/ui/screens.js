@@ -2,7 +2,6 @@
 import { esc } from './ui.js';
 import { COLORS, COLOR_NAMES } from '../sim/constants.js';
 import { ACTIONS, ACTION_LABELS, keyLabel, rebind } from '../input/bindings.js';
-import { nextLevelId } from '../levels/index.js';
 
 const fmt = (ticks) => {
   const s = ticks / 60;
@@ -21,24 +20,32 @@ export function createScreens(app) {
     title() {
       app.screen = 'title';
       app.audio.play('title');
+      // Continue picks up the last solo level, or the one after it once cleared.
+      const last = app.save.settings.lastPlay;
+      let resume = last && app.levels.find((l) => l.id === last.id) ? last.id : null;
+      if (resume && app.save.isCleared(resume)) {
+        const next = app.nextAfter(resume);
+        if (next && app.save.isUnlocked(next)) resume = next;
+      }
+      const resumeDef = resume && app.levels.find((l) => l.id === resume);
       ui.show(
         `${logo()}
         <p class="tagline">A squishy co-op puzzle platformer</p>
         <div class="menu">
-          <button class="btn primary" data-nav data-go="solo">Solo</button>
+          ${resumeDef ? `<button class="btn primary" data-nav data-go="continue">Continue · ${esc(resumeDef.name)}</button>` : ''}
+          <button class="btn ${resumeDef ? '' : 'primary'}" data-nav data-go="solo">Solo</button>
           <button class="btn" data-nav data-go="local">Local Co-op</button>
-          <button class="btn" data-nav data-go="online">Online <span style="font-size:16px;opacity:0.8;font-weight:600">(Coming Soon)</span></button>
-          <button class="btn" data-nav data-go="settings">Settings</button>
-          <button class="btn" data-nav data-go="credits">Credits</button>
-        </div>
-        <p class="hint">Arrows + Enter, or a gamepad</p>`,
+          <div class="row"><button class="btn small" data-nav data-go="settings">Settings</button><button class="btn small" data-nav data-go="credits">Credits</button></div>
+        </div>`,
         {
           bind: (el) =>
             on(el, '[data-go]', (b) => {
               const go = b.dataset.go;
-              if (go === 'solo') screens.soloSetup();
+              if (go === 'continue') {
+                app.setMode('solo', last.n ?? 2);
+                app.startLevel(resume);
+              } else if (go === 'solo') screens.soloSetup();
               else if (go === 'local') screens.localSetup();
-              else if (go === 'online') screens.online();
               else if (go === 'settings') screens.settings(() => screens.title());
               else screens.credits();
             }),
@@ -60,11 +67,11 @@ export function createScreens(app) {
           </div>
           <div class="keys">
             <span><kbd>A</kbd> <kbd>D</kbd> / <kbd>←</kbd> <kbd>→</kbd></span><span>Move</span>
-            <span><kbd>W</kbd> / <kbd>↑</kbd></span><span>Jump, or enter an open door</span>
-            <span><kbd>S</kbd> / <kbd>↓</kbd></span><span>Squish & crawl (friends bounce off you)</span>
+            <span><kbd>W</kbd> / <kbd>↑</kbd></span><span>Jump / enter door</span>
+            <span><kbd>S</kbd> / <kbd>↓</kbd></span><span>Squish: friends bounce</span>
             ${n > 1 ? `<span><kbd>Q</kbd> <kbd>E</kbd> / <kbd>1</kbd>-<kbd>4</kbd></span><span>Switch mochi</span>
-            <span><kbd>F</kbd></span><span>Follow me on / off</span>` : ''}
-            <span><kbd>Esc</kbd></span><span>Pause</span>
+            <span><kbd>F</kbd></span><span>Team follows you</span>` : ''}
+            <span><kbd>P</kbd></span><span>Pause</span>
           </div>
           <div class="row"><button class="btn small" data-nav data-back>Back</button><button class="btn primary small" data-nav data-go>Choose level</button></div>
         </div>`,
@@ -179,7 +186,7 @@ export function createScreens(app) {
     pause() {
       app.screen = 'pause';
       const hint = app.session?.def.hint;
-      const nextId = app.session ? nextLevelId(app.session.def.id) : null;
+      const nextId = app.session ? app.nextAfter(app.session.def.id) : null;
       ui.show(
         `<div class="card" style="max-width:520px;margin:auto">
           <h2 style="text-align:center">Paused</h2>
@@ -219,29 +226,6 @@ export function createScreens(app) {
       );
     },
 
-    // One-time explainer shown before the first solo level.
-    soloTip() {
-      app.screen = 'soloTip';
-      const done = () => {
-        app.save.saveSettings({ soloTipSeen: true });
-        app.resume();
-      };
-      ui.show(
-        `<div class="card" style="max-width:640px;margin:auto">
-          <h2 style="text-align:center">You lead the whole team!</h2>
-          <p style="font-size:20px;text-align:center">Every level needs teamwork, so in solo you control <strong>all</strong> the mochi, one at a time. The arrow shows who you are moving.</p>
-          <div class="keys">
-            <span><kbd>Q</kbd> <kbd>E</kbd> / <kbd>1</kbd>-<kbd>4</kbd></span><span>Switch to another mochi</span>
-            <span><kbd>F</kbd></span><span>The others follow you</span>
-            <span><kbd>S</kbd> / <kbd>↓</kbd></span><span>Squish: a squished mochi stays squished while you switch away</span>
-          </div>
-          <p class="muted" style="text-align:center">Everyone has to reach the door to finish a level.</p>
-          <div class="row"><button class="btn primary" data-nav data-ok>Got it!</button></div>
-        </div>`,
-        { dim: true, onBack: done, bind: (el) => on(el, '[data-ok]', done) },
-      );
-    },
-
     results({ ticks, stars, newBest, nextId }) {
       app.screen = 'results';
       const def = app.session?.def;
@@ -254,8 +238,7 @@ export function createScreens(app) {
           <div class="menu">
             ${nextId ? '<button class="btn primary" data-nav data-a="next">Next level</button>' : ''}
             ${stars < 3 ? '<button class="btn reward" data-nav data-a="gold-reward">★ Claim 3-Star Gold (Ad)</button>' : ''}
-            <button class="btn" data-nav data-a="retry">Retry</button>
-            <button class="btn" data-nav data-a="map">Level map</button>
+            <div class="row"><button class="btn small" data-nav data-a="retry">Retry</button><button class="btn small" data-nav data-a="map">Level map</button></div>
           </div>
         </div>`,
         {
@@ -304,7 +287,8 @@ export function createScreens(app) {
           ${slider('sfx', 'Sound effects')}
           <label class="toggle"><input type="checkbox" data-nav data-flag="reducedMotion" ${s.reducedMotion ? 'checked' : ''}/> Reduced motion (no shake, fewer particles)</label>
           <label class="toggle"><input type="checkbox" data-nav data-flag="glyphs" ${s.glyphs ? 'checked' : ''}/> Show colour symbols on mochi</label>
-          <div class="row" style="justify-content:flex-start;margin:8px 0 4px"><button class="btn small" data-nav data-fs>Toggle fullscreen</button><button class="btn small" data-nav data-reset>Reset keys</button></div>
+          <div class="row" style="justify-content:flex-start;margin:8px 0 4px"><button class="btn small" data-nav data-reset>Reset keys</button></div>
+          <details class="rebind"><summary>Change keys</summary>
           <table class="bindings">
             <tr><th></th>${ACTIONS.map((a) => `<th>${ACTION_LABELS[a]}</th>`).join('')}</tr>
             ${app.input.bindings
@@ -312,6 +296,7 @@ export function createScreens(app) {
               .join('')}
           </table>
           <p class="muted">Click a key, then press the new key (Esc cancels). In solo, Q/E switch mochi and F toggles follow.</p>
+          </details>
           <div class="row"><button class="btn primary small" data-nav data-done>Done</button></div>
         </div>`,
         {
@@ -333,10 +318,6 @@ export function createScreens(app) {
                 app.applySettings();
               }),
             );
-            on(el, '[data-fs]', () => {
-              if (document.fullscreenElement) document.exitFullscreen?.();
-              else document.documentElement.requestFullscreen?.().catch(() => ui.toast('Fullscreen is not available here'));
-            });
             on(el, '[data-reset]', () => {
               app.save.saveSettings({ bindings: null });
               app.applySettings();
@@ -368,19 +349,6 @@ export function createScreens(app) {
           <p><strong>Mochi Mob</strong> is an original game. Every character, level, sound and melody is made in code: the art is drawn procedurally on a canvas and the music is composed by a small seeded generator.</p>
           <p class="muted">Built with JavaScript, Canvas 2D and WebAudio. Font: Baloo 2 (Google Fonts, SIL Open Font License).</p>
           <div class="row"><button class="btn primary small" data-nav data-back>Back</button></div>
-        </div>`,
-        { onBack: () => screens.title(), bind: (el) => on(el, '[data-back]', () => screens.title()) },
-      );
-    },
-
-    online() {
-      app.screen = 'online';
-      ui.show(
-        `<div class="card" style="max-width:620px;margin:auto">
-          <h2>Online Multiplayer</h2>
-          <p style="font-size:22px;text-align:center;margin:16px 0">🌐 <strong>Planned for a future update!</strong></p>
-          <p class="muted" style="text-align:center;font-size:18px;line-height:1.5">Dedicated online room matchmaking is in active development.<br><br>In the meantime, you can experience all 24 levels in <strong>Solo Mode</strong> (controlling your team with Q/E) or team up in <strong>Local Co-op</strong> on the same keyboard or controllers!</p>
-          <div class="row" style="margin-top:24px"><button class="btn primary small" data-nav data-back>Back to Menu</button></div>
         </div>`,
         { onBack: () => screens.title(), bind: (el) => on(el, '[data-back]', () => screens.title()) },
       );

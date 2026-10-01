@@ -22,4 +22,7 @@ export default {
     { type: 'plate', id: 'b', x: 24, y: 9 },
     { type: 'gate', id: 'shutter', x: 20, y: 1, h: 9, link: ['a', 'b'] },
   ],
+  prompts: [
+    { x: 16.5, y: 7.5, keys: [], text: 'Stand here to hold the shutter' },
+  ],
 };

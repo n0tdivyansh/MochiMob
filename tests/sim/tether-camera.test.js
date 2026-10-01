@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { world, run, runEvents } from './helpers.js';
-import { cameraTarget, spanLimits } from '../../src/sim/camera.js';
+import { cameraTarget, spanLimits, MAX_ZOOM } from '../../src/sim/camera.js';
 import { INPUT, MAX_SPAN_X } from '../../src/sim/constants.js';
 
 const { LEFT, RIGHT } = INPUT;
@@ -95,7 +95,7 @@ describe('camera span limit', () => {
     const s = world(WIDE);
     settle(s);
     const cam = cameraTarget(s);
-    expect(cam.zoom).toBeLessThanOrEqual(1.25);
+    expect(cam.zoom).toBeLessThanOrEqual(MAX_ZOOM);
     expect(cam.zoom).toBeGreaterThanOrEqual(0.65);
     const halfW = 1920 / cam.zoom / 2;
     expect(cam.x - halfW).toBeGreaterThanOrEqual(0);
@@ -119,9 +119,9 @@ describe('camera span limit', () => {
 });
 
 describe('camera zoom', () => {
-  it('zooms in to 1.25 when the team is bunched together', () => {
+  it('zooms in to MAX_ZOOM when the team is bunched together', () => {
     const s = world(WIDE);
     settle(s);
-    expect(cameraTarget(s).zoom).toBeCloseTo(1.25, 5);
+    expect(cameraTarget(s).zoom).toBeCloseTo(MAX_ZOOM, 5);
   });
 });

@@ -1,5 +1,6 @@
 import { TILE, T, INPUT, FOLLOW_STOP, FRICTION } from './constants.js';
 import { solidsFor, tileAt } from './collide.js';
+import { isSupportedBy } from './physics.js';
 
 const JUMP_HOLD = 14;
 
@@ -46,8 +47,8 @@ function floorBelow(state, b, x) {
   return false;
 }
 
-function hazardAhead(state, b, dir) {
-  const x = dir > 0 ? b.x + b.w + 8 : b.x - 8;
+function hazardAhead(state, b, dir, look) {
+  const x = dir > 0 ? b.x + b.w + look : b.x - look;
   const c = Math.floor(x / TILE);
   const r = Math.floor((b.y + b.h - 1) / TILE);
   return tileAt(state, c, r) === T.SPIKES;
@@ -62,6 +63,9 @@ function followBits(state, b, t) {
     bits |= INPUT.JUMP;
   }
   if (!t.alive || t.inDoor || !b.alive) return bits;
+  // Riding the leader's head: the carry already moves us. Walking too would
+  // double our speed and march us off the front (into pits).
+  if (isSupportedBy(b, t)) return bits;
   const dx = t.x + t.w / 2 - (b.x + b.w / 2);
   const targetBelow = t.y + t.h >= b.y + b.h + 32;
   const canStartJump = b.grounded && ai.jumpT === 0 && !(b.prev & INPUT.JUMP);
@@ -78,7 +82,7 @@ function followBits(state, b, t) {
     const look = 8 + brake;
     const footX = dir > 0 ? b.x + b.w + look : b.x - look;
     const ledge = b.grounded && !floorBelow(state, b, footX);
-    const danger = hazardAhead(state, b, dir);
+    const danger = hazardAhead(state, b, dir, look);
     if ((ledge && !targetBelow) || danger) {
       // stay put at the edge
     } else {

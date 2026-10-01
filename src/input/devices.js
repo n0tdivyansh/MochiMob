@@ -3,7 +3,7 @@
 import { bitsFor, DEFAULT_BINDINGS, SOLO_KEYS } from './bindings.js';
 import { INPUT } from '../sim/constants.js';
 
-const NAV_KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', Enter: 'ok', Space: 'ok', Escape: 'back' };
+const NAV_KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', Enter: 'ok', Space: 'ok', Escape: 'back', KeyP: 'pause' };
 const PAD_NAV = { 12: 'up', 13: 'down', 14: 'left', 15: 'right', 0: 'ok', 1: 'back', 9: 'pause' };
 const DEAD = 0.35;
 

@@ -3,7 +3,7 @@ import { MAX_SPAN_X } from './constants.js';
 export const VIEW_W = 1920;
 export const VIEW_H = 1080;
 export const MIN_ZOOM = 0.65;
-export const MAX_ZOOM = 1.25;
+export const MAX_ZOOM = 1.45; // close enough that mochi read clearly in an 800px iframe
 const MARGIN_X = 300;
 const MARGIN_Y = 220;
 
@@ -71,7 +71,7 @@ export function cameraTarget(state) {
     const inner = Math.abs(cx - all.x) <= halfW * 0.6 && Math.abs(cy - all.y) <= halfH * 0.6;
     const allVisible = list.every((b) => b.x >= all.x - halfW && b.x + b.w <= all.x + halfW);
     if (inner && allVisible) return { x: all.x, y: all.y, zoom: all.zoom };
-    const zoom = 0.85;
+    const zoom = MAX_ZOOM;
     return {
       x: clampAxis(cx, VIEW_W / zoom / 2, state.static.W),
       y: clampAxis(cy, VIEW_H / zoom / 2, state.static.H),

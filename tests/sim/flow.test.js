@@ -95,6 +95,20 @@ describe('key and door', () => {
     expect(s.key.holder).toBe(-2);
   });
 
+  it('once a teammate holds the key, anyone touching the door unlocks it', () => {
+    const s = world();
+    const [a, c] = s.blobs;
+    settle(s);
+    a.x = 14 * 64; // ROOM key sits at col 14
+    run(s, 10);
+    expect(s.key.holder).toBe(0);
+    a.x = 3 * 64; // holder walks away from the door
+    c.x = 17 * 64; // teammate stands in the doorway
+    const ev = runEvents(s, 10);
+    expect(ev.some((e) => e.type === 'unlock')).toBe(true);
+    expect(s.door.open).toBe(true);
+  });
+
   it('enter and exit with UP; clear once when everyone is inside', () => {
     const s = world();
     const [a, c] = s.blobs;
